@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const COVERS = "https://uploads.mangadex.org";
+const COVERS = "https://uploads.mangadex.org/covers";
 
 async function proxy(splat: string): Promise<Response> {
   const target = `${COVERS}/${splat}`;
