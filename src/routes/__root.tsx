@@ -1,4 +1,5 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Header } from "@/components/Header";
 
 import appCss from "../styles.css?url";
 
@@ -29,11 +30,11 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Inkwell — Read Manga Online" },
+      { name: "description", content: "Discover and read manga online. Browse trending series, search thousands of titles, and read chapters page-by-page." },
+      { name: "author", content: "Inkwell" },
+      { property: "og:title", content: "Inkwell — Read Manga Online" },
+      { property: "og:description", content: "Discover and read manga online. Browse trending series and read chapters." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -65,5 +66,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  return <Outlet />;
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
+        Powered by the MangaDex API • SFW content only
+      </footer>
+    </div>
+  );
 }
