@@ -1,8 +1,9 @@
 // MangaDex API client (SFW only)
 // Docs: https://api.mangadex.org/docs/
 
-const API = "https://api.mangadex.org";
-const COVER = "https://uploads.mangadex.org/covers";
+// Use same-origin proxies to avoid CORS and hotlink protection
+const API = "/api/mangadex";
+const COVER = "/api/covers";
 
 // Strict SFW: only "safe" content rating, exclude all suggestive/erotica/porn
 const SFW_PARAMS = "contentRating[]=safe";
