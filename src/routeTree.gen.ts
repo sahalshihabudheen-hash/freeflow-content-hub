@@ -13,8 +13,9 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MangaIdRouteImport } from './routes/manga.$id'
 import { Route as ChapterIdRouteImport } from './routes/chapter.$id'
-import { Route as ApiCoversSplatRouteImport } from './routes/api.covers.$'
+import { Route as ApiImageRouteImport } from './routes/api.image'
 import { Route as ApiMangadexSplatRouteImport } from './routes/api.mangadex.$'
+import { Route as ApiCoversSplatRouteImport } from './routes/api.covers.$'
 
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
@@ -36,9 +37,9 @@ const ChapterIdRoute = ChapterIdRouteImport.update({
   path: '/chapter/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCoversSplatRoute = ApiCoversSplatRouteImport.update({
-  id: '/api/covers/$',
-  path: '/api/covers/$',
+const ApiImageRoute = ApiImageRouteImport.update({
+  id: '/api/image',
+  path: '/api/image',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMangadexSplatRoute = ApiMangadexSplatRouteImport.update({
@@ -46,10 +47,16 @@ const ApiMangadexSplatRoute = ApiMangadexSplatRouteImport.update({
   path: '/api/mangadex/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCoversSplatRoute = ApiCoversSplatRouteImport.update({
+  id: '/api/covers/$',
+  path: '/api/covers/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/search': typeof SearchRoute
+  '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
   '/api/covers/$': typeof ApiCoversSplatRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/search': typeof SearchRoute
+  '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
   '/api/covers/$': typeof ApiCoversSplatRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/search': typeof SearchRoute
+  '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
   '/api/covers/$': typeof ApiCoversSplatRoute
@@ -74,13 +83,28 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/search' | '/chapter/$id' | '/manga/$id' | '/api/covers/$' | '/api/mangadex/$'
+  fullPaths:
+    | '/'
+    | '/search'
+    | '/api/image'
+    | '/chapter/$id'
+    | '/manga/$id'
+    | '/api/covers/$'
+    | '/api/mangadex/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/search' | '/chapter/$id' | '/manga/$id' | '/api/covers/$' | '/api/mangadex/$'
+  to:
+    | '/'
+    | '/search'
+    | '/api/image'
+    | '/chapter/$id'
+    | '/manga/$id'
+    | '/api/covers/$'
+    | '/api/mangadex/$'
   id:
     | '__root__'
     | '/'
     | '/search'
+    | '/api/image'
     | '/chapter/$id'
     | '/manga/$id'
     | '/api/covers/$'
@@ -90,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SearchRoute: typeof SearchRoute
+  ApiImageRoute: typeof ApiImageRoute
   ChapterIdRoute: typeof ChapterIdRoute
   MangaIdRoute: typeof MangaIdRoute
   ApiCoversSplatRoute: typeof ApiCoversSplatRoute
@@ -126,11 +151,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChapterIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/covers/$': {
-      id: '/api/covers/$'
-      path: '/api/covers/$'
-      fullPath: '/api/covers/$'
-      preLoaderRoute: typeof ApiCoversSplatRouteImport
+    '/api/image': {
+      id: '/api/image'
+      path: '/api/image'
+      fullPath: '/api/image'
+      preLoaderRoute: typeof ApiImageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/mangadex/$': {
@@ -140,12 +165,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMangadexSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/covers/$': {
+      id: '/api/covers/$'
+      path: '/api/covers/$'
+      fullPath: '/api/covers/$'
+      preLoaderRoute: typeof ApiCoversSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SearchRoute: SearchRoute,
+  ApiImageRoute: ApiImageRoute,
   ChapterIdRoute: ChapterIdRoute,
   MangaIdRoute: MangaIdRoute,
   ApiCoversSplatRoute: ApiCoversSplatRoute,
@@ -154,3 +187,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
