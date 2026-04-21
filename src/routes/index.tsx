@@ -7,9 +7,9 @@ import { Loader2 } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Inkwell — Discover & Read Manga" },
+      { title: "JARVIS COMICS — Discover & Read Manga" },
       { name: "description", content: "Browse trending and recently updated manga. Read chapters online for free." },
-      { property: "og:title", content: "Inkwell — Discover & Read Manga" },
+      { property: "og:title", content: "JARVIS COMICS — Discover & Read Manga" },
       { property: "og:description", content: "Browse trending and recently updated manga. Read chapters online for free." },
     ],
   }),

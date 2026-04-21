@@ -11,9 +11,9 @@ export const Route = createFileRoute("/search")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Search — Inkwell" },
+      { title: "Search — JARVIS COMICS" },
       { name: "description", content: "Search thousands of manga titles." },
-      { property: "og:title", content: "Search — Inkwell" },
+      { property: "og:title", content: "Search — JARVIS COMICS" },
       { property: "og:description", content: "Search thousands of manga titles." },
     ],
   }),
