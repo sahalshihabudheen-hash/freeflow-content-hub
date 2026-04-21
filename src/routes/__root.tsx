@@ -30,10 +30,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Inkwell — Read Manga Online" },
+      { title: "JARVIS COMICS — Read Manga Online" },
       { name: "description", content: "Discover and read manga online. Browse trending series, search thousands of titles, and read chapters page-by-page." },
-      { name: "author", content: "Inkwell" },
-      { property: "og:title", content: "Inkwell — Read Manga Online" },
+      { name: "author", content: "JARVIS COMICS" },
+      { property: "og:title", content: "JARVIS COMICS — Read Manga Online" },
       { property: "og:description", content: "Discover and read manga online. Browse trending series and read chapters." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

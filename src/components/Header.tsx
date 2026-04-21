@@ -23,7 +23,7 @@ export function Header() {
             <BookOpen className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="hidden sm:inline bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>
-            Inkwell
+            JARVIS COMICS
           </span>
         </Link>
 
