@@ -1,9 +1,13 @@
 // MangaDex API client (SFW only)
 // Docs: https://api.mangadex.org/docs/
 
-// Use same-origin proxy for API calls; cover images can load directly
+// Use same-origin API/image proxies so reading stays inside the app
 const API = "/api/mangadex";
-const COVER = "https://uploads.mangadex.org/covers";
+const IMAGE_PROXY = "/api/image?url=";
+
+function proxiedImage(url: string): string {
+  return `${IMAGE_PROXY}${encodeURIComponent(url)}`;
+}
 
 // Strict SFW: only "safe" content rating, exclude all suggestive/erotica/porn
 const SFW_PARAMS = "contentRating[]=safe";
@@ -43,7 +47,7 @@ function getCoverUrl(manga: any): string {
   const cover = manga.relationships?.find((r: any) => r.type === "cover_art");
   const fileName = cover?.attributes?.fileName;
   if (!fileName) return "";
-  return `${COVER}/${manga.id}/${fileName}.512.jpg`;
+  return proxiedImage(`https://uploads.mangadex.org/covers/${manga.id}/${fileName}.512.jpg`);
 }
 
 function mapManga(m: any): Manga {
@@ -121,6 +125,6 @@ export async function getChapterPages(chapterId: string): Promise<{ urls: string
   const files: string[] = json.chapter.data;
   return {
     chapterId,
-    urls: files.map((f) => `${base}/data/${hash}/${f}`),
+    urls: files.map((f) => proxiedImage(`${base}/data/${hash}/${f}`)),
   };
 }

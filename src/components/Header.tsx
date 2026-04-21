@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, BookOpen } from "lucide-react";
+import { Search } from "lucide-react";
+import jarvisLogo from "@/assets/jarvis-comics-logo.png";
 
 export function Header() {
   const [q, setQ] = useState("");
@@ -14,36 +15,33 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur-xl">
-      <div className="container mx-auto flex h-16 items-center gap-4 px-4">
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-lg"
-            style={{ background: "var(--gradient-hero)" }}
-          >
-            <BookOpen className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="hidden sm:inline bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>
-            JARVIS COMICS
-          </span>
+      <div className="container mx-auto flex h-18 items-center gap-4 px-4 py-2">
+        <Link to="/" className="shrink-0">
+          <img
+            src={jarvisLogo}
+            alt="JARVIS COMICS"
+            className="h-10 w-auto sm:h-12"
+            loading="eager"
+          />
         </Link>
 
-        <form onSubmit={onSubmit} className="flex-1 max-w-xl mx-auto">
+        <form onSubmit={onSubmit} className="mx-auto flex-1 max-w-xl">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search manga..."
-              className="w-full h-10 pl-10 pr-4 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
+              className="h-10 w-full rounded-lg border border-border bg-input pl-10 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
             />
           </div>
         </form>
 
-        <nav className="hidden md:flex items-center gap-1 text-sm">
-          <Link to="/" className="px-3 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition" activeProps={{ className: "px-3 py-2 rounded-md text-foreground bg-secondary" }} activeOptions={{ exact: true }}>
+        <nav className="hidden items-center gap-1 text-sm md:flex">
+          <Link to="/" className="rounded-md px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-md px-3 py-2 text-foreground bg-secondary" }} activeOptions={{ exact: true }}>
             Home
           </Link>
-          <Link to="/search" className="px-3 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition" activeProps={{ className: "px-3 py-2 rounded-md text-foreground bg-secondary" }}>
+          <Link to="/search" className="rounded-md px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-md px-3 py-2 text-foreground bg-secondary" }}>
             Browse
           </Link>
         </nav>
