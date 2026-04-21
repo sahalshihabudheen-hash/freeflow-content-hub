@@ -97,23 +97,26 @@ export async function getManga(id: string): Promise<Manga> {
 }
 
 export async function getChapters(mangaId: string, limit = 100): Promise<Chapter[]> {
-  const url = `${API}/manga/${mangaId}/feed?limit=${limit}&translatedLanguage[]=en&order[chapter]=asc&${SFW_PARAMS}&includes[]=scanlation_group`;
+  const url = `${API}/manga/${mangaId}/feed?limit=${limit}&translatedLanguage[]=en&order[chapter]=asc&${SFW_PARAMS}&includes[]=scanlation_group&includeExternalUrl=0`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to load chapters");
   const json = await res.json();
-  return json.data.map((c: any) => {
-    const a = c.attributes;
-    const sg = c.relationships?.find((r: any) => r.type === "scanlation_group");
-    return {
-      id: c.id,
-      chapter: a.chapter,
-      title: a.title,
-      language: a.translatedLanguage,
-      pages: a.pages,
-      publishAt: a.publishAt,
-      scanlator: sg?.attributes?.name ?? "Unknown",
-    };
-  });
+  return json.data
+    .map((c: any) => {
+      const a = c.attributes;
+      const sg = c.relationships?.find((r: any) => r.type === "scanlation_group");
+      return {
+        id: c.id,
+        chapter: a.chapter,
+        title: a.title,
+        language: a.translatedLanguage,
+        pages: a.pages,
+        publishAt: a.publishAt,
+        scanlator: sg?.attributes?.name ?? "Unknown",
+        externalUrl: a.externalUrl ?? null,
+      };
+    })
+    .filter((c: any) => c.pages > 0 && !c.externalUrl);
 }
 
 export async function getChapterPages(chapterId: string): Promise<{ urls: string[]; chapterId: string }> {
