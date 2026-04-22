@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Upload, ImagePlus, Trash2, BookPlus } from "lucide-react";
+import { Loader2, Upload, ImagePlus, Trash2, BookPlus, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/upload")({
   head: () => ({
@@ -139,10 +139,13 @@ function UploadPage() {
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-5xl">
+      <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
+        <ArrowLeft className="h-4 w-4" /> Back to home
+      </Link>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold">Upload your comics</h1>
-          <p className="text-muted-foreground mt-1">Publish your own series on JARVIS COMICS.</p>
+          <p className="text-muted-foreground mt-1">Publish your own series on JARVIS COMICS. Cover supports JPG, PNG, WEBP & GIF.</p>
         </div>
         <button onClick={signOut} className="text-sm text-muted-foreground hover:text-foreground">Sign out</button>
       </div>
@@ -158,7 +161,7 @@ function UploadPage() {
             <label className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-border cursor-pointer hover:bg-secondary">
               <ImagePlus className="h-5 w-5 text-primary" />
               <span className="text-sm">{coverFile ? coverFile.name : "Choose cover image"}</span>
-              <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)} className="hidden" />
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)} className="hidden" />
             </label>
             <button type="submit" disabled={creating || !title.trim()} className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-60 inline-flex items-center justify-center gap-2">
               {creating && <Loader2 className="h-4 w-4 animate-spin" />} Create comic
@@ -185,7 +188,7 @@ function UploadPage() {
                   <ImagePlus className="h-5 w-5 text-primary" />
                   <span className="text-sm">{pageFiles.length > 0 ? `${pageFiles.length} pages selected` : "Choose chapter pages (multiple)"}</span>
                 </div>
-                <input type="file" accept="image/*" multiple onChange={(e) => setPageFiles(Array.from(e.target.files ?? []))} className="hidden" />
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple onChange={(e) => setPageFiles(Array.from(e.target.files ?? []))} className="hidden" />
               </label>
               <button type="submit" disabled={uploadingChapter || !selectedId || pageFiles.length === 0 || !chapNumber.trim()} className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-60 inline-flex items-center justify-center gap-2">
                 {uploadingChapter && <Loader2 className="h-4 w-4 animate-spin" />} Upload chapter

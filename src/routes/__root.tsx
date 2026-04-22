@@ -73,7 +73,7 @@ function RootComponent() {
         <Outlet />
       </main>
       <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-        POWERED BY JARVIS • SFW content only
+        POWERED BY JARVIS
       </footer>
     </div>
   );

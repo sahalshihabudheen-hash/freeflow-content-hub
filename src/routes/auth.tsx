@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -38,8 +38,14 @@ function AuthPage() {
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-md">
+      <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
+        <ArrowLeft className="h-4 w-4" /> Back to home
+      </Link>
       <h1 className="text-3xl font-bold mb-2">{mode === "signin" ? "Sign in" : "Create account"}</h1>
-      <p className="text-muted-foreground mb-8">Upload your own comics to JARVIS COMICS.</p>
+      <p className="text-muted-foreground mb-2">Join JARVIS COMICS — read & upload your own comics.</p>
+      {mode === "signup" && (
+        <p className="text-xs text-muted-foreground mb-6">We'll email you a confirmation link from JARVIS Comics to verify your account.</p>
+      )}
       <form onSubmit={submit} className="space-y-4">
         <input type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full h-11 rounded-lg border border-border bg-input px-4" />
         <input type="password" required minLength={6} placeholder="Password (min 6 chars)" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-11 rounded-lg border border-border bg-input px-4" />
