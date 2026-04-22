@@ -9,22 +9,46 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UploadRouteImport } from './routes/upload'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MyComicIdRouteImport } from './routes/my-comic.$id'
+import { Route as MyChapterIdRouteImport } from './routes/my-chapter.$id'
 import { Route as MangaIdRouteImport } from './routes/manga.$id'
 import { Route as ChapterIdRouteImport } from './routes/chapter.$id'
 import { Route as ApiImageRouteImport } from './routes/api.image'
 import { Route as ApiMangadexSplatRouteImport } from './routes/api.mangadex.$'
 import { Route as ApiCoversSplatRouteImport } from './routes/api.covers.$'
 
+const UploadRoute = UploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyComicIdRoute = MyComicIdRouteImport.update({
+  id: '/my-comic/$id',
+  path: '/my-comic/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyChapterIdRoute = MyChapterIdRouteImport.update({
+  id: '/my-chapter/$id',
+  path: '/my-chapter/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MangaIdRoute = MangaIdRouteImport.update({
@@ -55,29 +79,41 @@ const ApiCoversSplatRoute = ApiCoversSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
+  '/upload': typeof UploadRoute
   '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
+  '/my-chapter/$id': typeof MyChapterIdRoute
+  '/my-comic/$id': typeof MyComicIdRoute
   '/api/covers/$': typeof ApiCoversSplatRoute
   '/api/mangadex/$': typeof ApiMangadexSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
+  '/upload': typeof UploadRoute
   '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
+  '/my-chapter/$id': typeof MyChapterIdRoute
+  '/my-comic/$id': typeof MyComicIdRoute
   '/api/covers/$': typeof ApiCoversSplatRoute
   '/api/mangadex/$': typeof ApiMangadexSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
+  '/upload': typeof UploadRoute
   '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
+  '/my-chapter/$id': typeof MyChapterIdRoute
+  '/my-comic/$id': typeof MyComicIdRoute
   '/api/covers/$': typeof ApiCoversSplatRoute
   '/api/mangadex/$': typeof ApiMangadexSplatRoute
 }
@@ -85,44 +121,67 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/search'
+    | '/upload'
     | '/api/image'
     | '/chapter/$id'
     | '/manga/$id'
+    | '/my-chapter/$id'
+    | '/my-comic/$id'
     | '/api/covers/$'
     | '/api/mangadex/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/search'
+    | '/upload'
     | '/api/image'
     | '/chapter/$id'
     | '/manga/$id'
+    | '/my-chapter/$id'
+    | '/my-comic/$id'
     | '/api/covers/$'
     | '/api/mangadex/$'
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/search'
+    | '/upload'
     | '/api/image'
     | '/chapter/$id'
     | '/manga/$id'
+    | '/my-chapter/$id'
+    | '/my-comic/$id'
     | '/api/covers/$'
     | '/api/mangadex/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   SearchRoute: typeof SearchRoute
+  UploadRoute: typeof UploadRoute
   ApiImageRoute: typeof ApiImageRoute
   ChapterIdRoute: typeof ChapterIdRoute
   MangaIdRoute: typeof MangaIdRoute
+  MyChapterIdRoute: typeof MyChapterIdRoute
+  MyComicIdRoute: typeof MyComicIdRoute
   ApiCoversSplatRoute: typeof ApiCoversSplatRoute
   ApiMangadexSplatRoute: typeof ApiMangadexSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/upload': {
+      id: '/upload'
+      path: '/upload'
+      fullPath: '/upload'
+      preLoaderRoute: typeof UploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -130,11 +189,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-comic/$id': {
+      id: '/my-comic/$id'
+      path: '/my-comic/$id'
+      fullPath: '/my-comic/$id'
+      preLoaderRoute: typeof MyComicIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-chapter/$id': {
+      id: '/my-chapter/$id'
+      path: '/my-chapter/$id'
+      fullPath: '/my-chapter/$id'
+      preLoaderRoute: typeof MyChapterIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manga/$id': {
@@ -177,13 +257,26 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   SearchRoute: SearchRoute,
+  UploadRoute: UploadRoute,
   ApiImageRoute: ApiImageRoute,
   ChapterIdRoute: ChapterIdRoute,
   MangaIdRoute: MangaIdRoute,
+  MyChapterIdRoute: MyChapterIdRoute,
+  MyComicIdRoute: MyComicIdRoute,
   ApiCoversSplatRoute: ApiCoversSplatRoute,
   ApiMangadexSplatRoute: ApiMangadexSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

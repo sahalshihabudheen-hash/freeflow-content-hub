@@ -44,6 +44,9 @@ export function Header() {
           <Link to="/search" className="rounded-md px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-md px-3 py-2 text-foreground bg-secondary" }}>
             Browse
           </Link>
+          <Link to="/upload" className="rounded-md px-3 py-2 text-primary font-medium transition hover:bg-secondary" activeProps={{ className: "rounded-md px-3 py-2 text-primary bg-secondary font-medium" }}>
+            Upload
+          </Link>
         </nav>
       </div>
     </header>
