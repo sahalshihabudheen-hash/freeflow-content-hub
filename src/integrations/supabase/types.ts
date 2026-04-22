@@ -14,7 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      user_chapters: {
+        Row: {
+          comic_id: string
+          created_at: string
+          id: string
+          number: string
+          page_paths: string[]
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          comic_id: string
+          created_at?: string
+          id?: string
+          number: string
+          page_paths?: string[]
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          comic_id?: string
+          created_at?: string
+          id?: string
+          number?: string
+          page_paths?: string[]
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_chapters_comic_id_fkey"
+            columns: ["comic_id"]
+            isOneToOne: false
+            referencedRelation: "user_comics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_comics: {
+        Row: {
+          cover_path: string | null
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          cover_path?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          cover_path?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

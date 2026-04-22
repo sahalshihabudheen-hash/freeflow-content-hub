@@ -44,7 +44,7 @@ function Index() {
             </span>
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Discover thousands of manga series and read them right in your browser. Curated SFW catalog powered by MangaDex.
+            Discover thousands of comic series and read them right in your browser. POWERED BY JARVIS.
           </p>
         </div>
       </section>
