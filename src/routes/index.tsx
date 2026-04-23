@@ -127,18 +127,20 @@ function Index() {
         />
       )}
 
+      {showSignup && <SignupPrompt onClose={() => setShowSignup(false)} />}
+
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 opacity-30" style={{ background: "var(--gradient-hero)" }} />
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at top, transparent, var(--background) 70%)" }} />
         <div className="container relative mx-auto px-4 py-20 md:py-28 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight animate-fade-in-up">
             Endless stories,{" "}
             <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>
               one page at a time
             </span>
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto animate-fade-in-up stagger-2">
             Discover thousands of comic series and read them right in your browser. POWERED BY JARVIS.
           </p>
         </div>
