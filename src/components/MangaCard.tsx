@@ -6,7 +6,7 @@ export function MangaCard({ manga }: { manga: Manga }) {
     <Link
       to="/manga/$id"
       params={{ id: manga.id }}
-      className="group flex flex-col gap-2"
+      className="group flex flex-col gap-2 animate-fade-in hover-lift"
     >
       <div
         className="relative aspect-[2/3] overflow-hidden rounded-lg border border-border bg-muted"
