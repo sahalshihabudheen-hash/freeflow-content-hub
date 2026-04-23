@@ -28,6 +28,7 @@ export const Route = createFileRoute("/")({
 });
 
 const PREFS_KEY = "jarvis.prefs.v1";
+const SIGNUP_PROMPT_KEY = "jarvis.signupPromptShown.v1";
 
 function loadPrefs(): Prefs | null {
   if (typeof window === "undefined") return null;
