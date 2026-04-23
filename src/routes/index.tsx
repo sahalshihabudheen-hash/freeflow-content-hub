@@ -43,6 +43,9 @@ function Index() {
   const [showModal, setShowModal] = useState(false);
   const [popular, setPopular] = useState<Manga[] | null>(null);
   const [recent, setRecent] = useState<Manga[] | null>(null);
+  const [topRated, setTopRated] = useState<Manga[] | null>(null);
+  const [newReleases, setNewReleases] = useState<Manga[] | null>(null);
+  const [genreSections, setGenreSections] = useState<Record<string, Manga[]>>({});
   const [error, setError] = useState<string | null>(null);
 
   // On mount: load saved prefs or open modal
@@ -60,16 +63,33 @@ function Index() {
     if (!prefs) return;
     setPopular(null);
     setRecent(null);
+    setTopRated(null);
+    setNewReleases(null);
+    setGenreSections({});
     setError(null);
+
     Promise.all([
       getPopular(24, prefs.genres, prefs.language),
       getRecentlyUpdated(18, prefs.genres, prefs.language),
+      getTopRated(18, prefs.genres, prefs.language),
+      getNewReleases(18, prefs.genres, prefs.language),
     ])
-      .then(([p, r]) => {
+      .then(([p, r, t, n]) => {
         setPopular(p);
         setRecent(r);
+        setTopRated(t);
+        setNewReleases(n);
       })
       .catch((e) => setError(e.message));
+
+    // Load each selected genre as its own section
+    if (prefs.genres.length > 0) {
+      prefs.genres.forEach((g) => {
+        getByGenre(g, 12, prefs.language)
+          .then((items) => setGenreSections((prev) => ({ ...prev, [g]: items })))
+          .catch(() => {});
+      });
+    }
   }, [prefs]);
 
   const handleSave = (p: Prefs) => {
