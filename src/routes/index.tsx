@@ -44,12 +44,27 @@ function loadPrefs(): Prefs | null {
 function Index() {
   const [prefs, setPrefs] = useState<Prefs | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
   const [popular, setPopular] = useState<Manga[] | null>(null);
   const [recent, setRecent] = useState<Manga[] | null>(null);
   const [topRated, setTopRated] = useState<Manga[] | null>(null);
   const [newReleases, setNewReleases] = useState<Manga[] | null>(null);
   const [genreSections, setGenreSections] = useState<Record<string, Manga[]>>({});
   const [error, setError] = useState<string | null>(null);
+
+  // First-visit signup prompt: show after a short delay if user is not logged in
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem(SIGNUP_PROMPT_KEY)) return;
+    const timer = setTimeout(async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        setShowSignup(true);
+        localStorage.setItem(SIGNUP_PROMPT_KEY, "1");
+      }
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // On mount: load saved prefs or open modal
   useEffect(() => {
