@@ -134,6 +134,33 @@ export async function getRecentlyUpdated(limit = 18, genres?: string[], language
   return json.data.map(mapManga);
 }
 
+export async function getTopRated(limit = 18, genres?: string[], language?: string): Promise<Manga[]> {
+  const filters = buildFilterParams(genres, language);
+  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[rating]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch top rated manga");
+  const json = await res.json();
+  return json.data.map(mapManga);
+}
+
+export async function getNewReleases(limit = 18, genres?: string[], language?: string): Promise<Manga[]> {
+  const filters = buildFilterParams(genres, language);
+  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[createdAt]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch new releases");
+  const json = await res.json();
+  return json.data.map(mapManga);
+}
+
+export async function getByGenre(genre: string, limit = 12, language?: string): Promise<Manga[]> {
+  const filters = buildFilterParams([genre], language);
+  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true&${filters}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch ${genre} manga`);
+  const json = await res.json();
+  return json.data.map(mapManga);
+}
+
 export async function searchManga(query: string, limit = 30): Promise<Manga[]> {
   const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&title=${encodeURIComponent(query)}&includes[]=cover_art&order[relevance]=desc`;
   const res = await fetch(url);
