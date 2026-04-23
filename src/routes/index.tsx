@@ -11,6 +11,8 @@ import {
 } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
 import { PreferencesModal, type Prefs } from "@/components/PreferencesModal";
+import { SignupPrompt } from "@/components/SignupPrompt";
+import { supabase } from "@/integrations/supabase/client";
 import { Loader2, SlidersHorizontal } from "lucide-react";
 
 export const Route = createFileRoute("/")({
