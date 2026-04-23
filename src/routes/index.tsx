@@ -156,7 +156,12 @@ function Index() {
         )}
 
         <Section title="Popular Now" items={popular} />
+        <Section title="New Releases" items={newReleases} />
+        <Section title="Top Rated" items={topRated} />
         <Section title="Recently Updated" items={recent} />
+        {prefs?.genres.map((g) => (
+          <Section key={g} title={g} items={genreSections[g] ?? null} />
+        ))}
       </div>
     </div>
   );
