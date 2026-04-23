@@ -1,6 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getPopular, getRecentlyUpdated, LANGUAGES, type Manga } from "@/lib/mangadex";
+import {
+  getPopular,
+  getRecentlyUpdated,
+  getTopRated,
+  getNewReleases,
+  getByGenre,
+  LANGUAGES,
+  type Manga,
+} from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
 import { PreferencesModal, type Prefs } from "@/components/PreferencesModal";
 import { Loader2, SlidersHorizontal } from "lucide-react";
