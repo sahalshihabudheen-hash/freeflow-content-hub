@@ -42,10 +42,7 @@ function AuthPage() {
         <ArrowLeft className="h-4 w-4" /> Back to home
       </Link>
       <h1 className="text-3xl font-bold mb-2">{mode === "signin" ? "Sign in" : "Create account"}</h1>
-      <p className="text-muted-foreground mb-2">Join JARVIS COMICS — read & upload your own comics.</p>
-      {mode === "signup" && (
-        <p className="text-xs text-muted-foreground mb-6">We'll email you a confirmation link from JARVIS Comics to verify your account.</p>
-      )}
+      <p className="text-muted-foreground mb-6">Join JARVIS COMICS — read & upload your own comics. No email verification needed.</p>
       <form onSubmit={submit} className="space-y-4">
         <input type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full h-11 rounded-lg border border-border bg-input px-4" />
         <input type="password" required minLength={6} placeholder="Password (min 6 chars)" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-11 rounded-lg border border-border bg-input px-4" />
