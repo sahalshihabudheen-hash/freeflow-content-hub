@@ -11,6 +11,8 @@ import {
 } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
 import { PreferencesModal, type Prefs } from "@/components/PreferencesModal";
+import { SignupPrompt } from "@/components/SignupPrompt";
+import { supabase } from "@/integrations/supabase/client";
 import { Loader2, SlidersHorizontal } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -26,6 +28,7 @@ export const Route = createFileRoute("/")({
 });
 
 const PREFS_KEY = "jarvis.prefs.v1";
+const SIGNUP_PROMPT_KEY = "jarvis.signupPromptShown.v1";
 
 function loadPrefs(): Prefs | null {
   if (typeof window === "undefined") return null;
@@ -41,12 +44,27 @@ function loadPrefs(): Prefs | null {
 function Index() {
   const [prefs, setPrefs] = useState<Prefs | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
   const [popular, setPopular] = useState<Manga[] | null>(null);
   const [recent, setRecent] = useState<Manga[] | null>(null);
   const [topRated, setTopRated] = useState<Manga[] | null>(null);
   const [newReleases, setNewReleases] = useState<Manga[] | null>(null);
   const [genreSections, setGenreSections] = useState<Record<string, Manga[]>>({});
   const [error, setError] = useState<string | null>(null);
+
+  // First-visit signup prompt: show after a short delay if user is not logged in
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem(SIGNUP_PROMPT_KEY)) return;
+    const timer = setTimeout(async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        setShowSignup(true);
+        localStorage.setItem(SIGNUP_PROMPT_KEY, "1");
+      }
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // On mount: load saved prefs or open modal
   useEffect(() => {
@@ -109,18 +127,20 @@ function Index() {
         />
       )}
 
+      {showSignup && <SignupPrompt onClose={() => setShowSignup(false)} />}
+
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 opacity-30" style={{ background: "var(--gradient-hero)" }} />
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at top, transparent, var(--background) 70%)" }} />
         <div className="container relative mx-auto px-4 py-20 md:py-28 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight animate-fade-in-up">
             Endless stories,{" "}
             <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>
               one page at a time
             </span>
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto animate-fade-in-up stagger-2">
             Discover thousands of comic series and read them right in your browser. POWERED BY JARVIS.
           </p>
         </div>
