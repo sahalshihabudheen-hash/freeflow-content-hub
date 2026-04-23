@@ -64,16 +64,70 @@ function mapManga(m: any): Manga {
   };
 }
 
-export async function getPopular(limit = 24): Promise<Manga[]> {
-  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true`;
+// Common genre tag UUIDs from MangaDex
+export const GENRE_TAGS: Record<string, string> = {
+  Action: "391b0423-d847-456f-aff0-8b0cfc03066b",
+  Adventure: "87cc87cd-a395-47af-b27a-93258283bbc6",
+  Comedy: "4d32cc48-9f00-4cca-9b5a-a839f0764984",
+  Drama: "b9af3a63-f058-46de-a9a0-e0c13906197a",
+  Fantasy: "cdc58593-87dd-415e-bbc0-2ec27bf404cc",
+  Horror: "cdad7e68-1419-41dd-bdce-27753074a640",
+  Mystery: "ee968100-4191-4968-93d3-f82d72be7e46",
+  Romance: "423e2eae-a7a2-4a8b-ac03-a8351462d71d",
+  "Sci-Fi": "256c8bd9-4904-4360-bf4f-508a76d67183",
+  "Slice of Life": "e5301a23-ebd9-49dd-a0cb-2add944c7fe9",
+  Sports: "69964a64-2f90-4d33-beeb-f3ed2875eb4c",
+  Supernatural: "eabc5b4c-6aff-42f3-b657-3e90cbd00b75",
+  Thriller: "07251805-a27e-4d59-b488-f0bfbec15168",
+  Historical: "33771934-028e-4cb3-8744-691e866a923e",
+};
+
+export const LANGUAGES: Record<string, string> = {
+  en: "English",
+  es: "Spanish",
+  "es-la": "Spanish (LATAM)",
+  fr: "French",
+  de: "German",
+  it: "Italian",
+  pt: "Portuguese",
+  "pt-br": "Portuguese (BR)",
+  ru: "Russian",
+  id: "Indonesian",
+  vi: "Vietnamese",
+  th: "Thai",
+  tr: "Turkish",
+  ar: "Arabic",
+  ja: "Japanese",
+  ko: "Korean",
+  zh: "Chinese",
+  "zh-hk": "Chinese (HK)",
+};
+
+function buildFilterParams(genres?: string[], language?: string): string {
+  const parts: string[] = [];
+  if (genres && genres.length) {
+    for (const g of genres) {
+      const id = GENRE_TAGS[g];
+      if (id) parts.push(`includedTags[]=${id}`);
+    }
+    parts.push("includedTagsMode=OR");
+  }
+  if (language) parts.push(`availableTranslatedLanguage[]=${language}`);
+  return parts.join("&");
+}
+
+export async function getPopular(limit = 24, genres?: string[], language?: string): Promise<Manga[]> {
+  const filters = buildFilterParams(genres, language);
+  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch popular manga");
   const json = await res.json();
   return json.data.map(mapManga);
 }
 
-export async function getRecentlyUpdated(limit = 18): Promise<Manga[]> {
-  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[latestUploadedChapter]=desc&includes[]=cover_art&hasAvailableChapters=true`;
+export async function getRecentlyUpdated(limit = 18, genres?: string[], language?: string): Promise<Manga[]> {
+  const filters = buildFilterParams(genres, language);
+  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[latestUploadedChapter]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch recent manga");
   const json = await res.json();
