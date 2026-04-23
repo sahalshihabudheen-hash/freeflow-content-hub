@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Shield } from "lucide-react";
 import jarvisLogo from "@/assets/jarvis-comics-logo.png";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 export function Header() {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +49,11 @@ export function Header() {
           <Link to="/upload" className="rounded-md px-3 py-2 text-primary font-medium transition hover:bg-secondary" activeProps={{ className: "rounded-md px-3 py-2 text-primary bg-secondary font-medium" }}>
             Upload
           </Link>
+          {isAdmin && (
+            <Link to="/admin" className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-foreground font-medium transition hover:bg-secondary" activeProps={{ className: "inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-foreground bg-secondary font-medium" }}>
+              <Shield className="h-4 w-4" /> Admin
+            </Link>
+          )}
         </nav>
       </div>
     </header>

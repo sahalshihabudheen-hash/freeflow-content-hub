@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackSession } from "@/lib/track-session";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -23,12 +24,15 @@ function AuthPage() {
     setErr(null);
     setLoading(true);
     try {
-      const fn = mode === "signin"
-        ? supabase.auth.signInWithPassword({ email, password })
-        : supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/upload` } });
-      const { error } = await fn;
+      const { data, error } = mode === "signin"
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/` } });
       if (error) throw error;
-      navigate({ to: "/upload" });
+      const userId = data.user?.id ?? data.session?.user?.id;
+      if (userId) {
+        trackSession(userId).catch(() => {});
+      }
+      navigate({ to: "/" });
     } catch (e: any) {
       setErr(e.message);
     } finally {
