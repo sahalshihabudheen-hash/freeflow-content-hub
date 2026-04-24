@@ -177,8 +177,9 @@ export async function getManga(id: string): Promise<Manga> {
   return mapManga(json.data);
 }
 
-export async function getChapters(mangaId: string, limit = 100): Promise<Chapter[]> {
-  const url = `${API}/manga/${mangaId}/feed?limit=${limit}&translatedLanguage[]=en&order[chapter]=asc&${SFW_PARAMS}&includes[]=scanlation_group&includeExternalUrl=0`;
+export async function getChapters(mangaId: string, limit = 200, language?: string): Promise<Chapter[]> {
+  const langParam = language ? `&translatedLanguage[]=${language}` : "";
+  const url = `${API}/manga/${mangaId}/feed?limit=${limit}${langParam}&order[chapter]=asc&${SFW_PARAMS}&includes[]=scanlation_group&includeExternalUrl=0`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to load chapters");
   const json = await res.json();
@@ -198,6 +199,14 @@ export async function getChapters(mangaId: string, limit = 100): Promise<Chapter
       };
     })
     .filter((c: any) => c.pages > 0 && !c.externalUrl);
+}
+
+export async function getAvailableLanguages(mangaId: string): Promise<string[]> {
+  const url = `${API}/manga/${mangaId}?includes[]=cover_art`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data?.attributes?.availableTranslatedLanguages ?? [];
 }
 
 export async function getChapterPages(chapterId: string): Promise<{ urls: string[]; chapterId: string }> {
