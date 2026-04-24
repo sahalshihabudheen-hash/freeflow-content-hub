@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { getManga, getChapters, type Manga, type Chapter } from "@/lib/mangadex";
-import { Loader2, BookOpen, Calendar } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { getManga, getChapters, getAvailableLanguages, LANGUAGES, type Manga, type Chapter } from "@/lib/mangadex";
+import { Loader2, BookOpen, Calendar, Languages } from "lucide-react";
 
 export const Route = createFileRoute("/manga/$id")({
   component: MangaDetail,
@@ -25,11 +25,31 @@ function MangaDetail() {
   const { id } = Route.useParams();
   const [manga, setManga] = useState<Manga | null>(null);
   const [chapters, setChapters] = useState<Chapter[] | null>(null);
+  const [availableLangs, setAvailableLangs] = useState<string[]>([]);
+  const [selectedLang, setSelectedLang] = useState<string>("en");
+  const [langInitialized, setLangInitialized] = useState(false);
 
   useEffect(() => {
     getManga(id).then(setManga).catch(() => {});
-    getChapters(id, 200).then(setChapters).catch(() => setChapters([]));
+    getAvailableLanguages(id).then((langs) => {
+      setAvailableLangs(langs);
+      // Pick English if available, otherwise first available language
+      const initial = langs.includes("en") ? "en" : (langs[0] ?? "en");
+      setSelectedLang(initial);
+      setLangInitialized(true);
+    }).catch(() => setLangInitialized(true));
   }, [id]);
+
+  useEffect(() => {
+    if (!langInitialized) return;
+    setChapters(null);
+    getChapters(id, 200, selectedLang).then(setChapters).catch(() => setChapters([]));
+  }, [id, selectedLang, langInitialized]);
+
+  const langLabel = useMemo(
+    () => (code: string) => LANGUAGES[code] ?? code.toUpperCase(),
+    []
+  );
 
   if (!manga) {
     return (
@@ -81,15 +101,36 @@ function MangaDetail() {
 
       {/* Chapters */}
       <div className="container mx-auto px-4 py-10">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-primary" /> Chapters
-        </h2>
-        {chapters === null ? (
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-primary" /> Chapters
+          </h2>
+          {availableLangs.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Languages className="h-4 w-4 text-muted-foreground" />
+              <select
+                value={selectedLang}
+                onChange={(e) => setSelectedLang(e.target.value)}
+                className="h-9 px-3 rounded-lg border border-border bg-card text-sm focus:outline-none focus:border-primary"
+              >
+                {availableLangs.map((l) => (
+                  <option key={l} value={l}>{langLabel(l)}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {availableLangs.length === 0 && langInitialized ? (
+          <p className="text-muted-foreground">No chapters available for this title.</p>
+        ) : chapters === null ? (
           <div className="flex justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : chapters.length === 0 ? (
-          <p className="text-muted-foreground">No English chapters available.</p>
+          <p className="text-muted-foreground">
+            No chapters available in {langLabel(selectedLang)}. Try another language above.
+          </p>
         ) : (
           <div className="grid gap-2">
             {chapters.map((c) => (
@@ -104,7 +145,9 @@ function MangaDetail() {
                   <div className="font-medium">
                     Chapter {c.chapter ?? "—"}{c.title ? ` · ${c.title}` : ""}
                   </div>
-                  <div className="text-xs text-muted-foreground truncate">{c.scanlator}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {c.scanlator} · {langLabel(c.language)}
+                  </div>
                 </div>
                 <div className="text-xs text-muted-foreground shrink-0">
                   {c.pages} pages
