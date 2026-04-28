@@ -59,10 +59,14 @@ function LiveSearch({
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
+  const [activeViaKeyboard, setActiveViaKeyboard] = useState(false);
   const navigate = useNavigate();
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const savedScrollRef = useRef(0);
+  const savedActiveRef = useRef(-1);
+  const restoreScrollRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (autoFocus) inputRef.current?.focus();
