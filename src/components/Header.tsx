@@ -15,6 +15,28 @@ function useDebounced<T>(value: T, ms: number): T {
   return d;
 }
 
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function Highlight({ text, query }: { text: string; query: string }) {
+  const q = query.trim();
+  if (!q) return <>{text}</>;
+  const re = new RegExp(`(${escapeRegExp(q)})`, "ig");
+  const parts = text.split(re);
+  return (
+    <>
+      {parts.map((p, i) =>
+        re.test(p) && p.toLowerCase() === q.toLowerCase() ? (
+          <mark key={i} className="bg-primary/30 text-foreground rounded px-0.5">{p}</mark>
+        ) : (
+          <span key={i}>{p}</span>
+        )
+      )}
+    </>
+  );
+}
+
 function LiveSearch({
   value,
   onChange,
@@ -22,6 +44,7 @@ function LiveSearch({
   onPick,
   placeholder = "Search manga...",
   inputClassName,
+  autoFocus = false,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -29,13 +52,21 @@ function LiveSearch({
   onPick: () => void;
   placeholder?: string;
   inputClassName?: string;
+  autoFocus?: boolean;
 }) {
   const debounced = useDebounced(value, 250);
   const [results, setResults] = useState<Manga[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);
   const navigate = useNavigate();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus();
+  }, [autoFocus]);
 
   useEffect(() => {
     const q = debounced.trim();
@@ -47,7 +78,7 @@ function LiveSearch({
     let cancelled = false;
     setLoading(true);
     searchManga(q, 6)
-      .then((r) => { if (!cancelled) setResults(r); })
+      .then((r) => { if (!cancelled) { setResults(r); setActiveIdx(-1); } })
       .catch(() => { if (!cancelled) setResults([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -61,6 +92,34 @@ function LiveSearch({
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  // Scroll active item into view
+  useEffect(() => {
+    if (activeIdx < 0 || !listRef.current) return;
+    const el = listRef.current.querySelectorAll<HTMLElement>("[data-result-item]")[activeIdx];
+    el?.scrollIntoView({ block: "nearest" });
+  }, [activeIdx]);
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!results || results.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setOpen(true);
+      setActiveIdx((i) => (i + 1) % results.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setOpen(true);
+      setActiveIdx((i) => (i <= 0 ? results.length - 1 : i - 1));
+    } else if (e.key === "Enter" && activeIdx >= 0) {
+      e.preventDefault();
+      const m = results[activeIdx];
+      setOpen(false);
+      onPick();
+      navigate({ to: "/manga/$id", params: { id: m.id } });
+    } else if (e.key === "Escape") {
+      setOpen(false);
+    }
+  };
+
   const showDropdown = open && value.trim().length >= 2;
 
   return (
@@ -69,10 +128,13 @@ function LiveSearch({
         <div className="relative group">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition group-focus-within:text-primary" />
           <input
+            ref={inputRef}
             value={value}
-            onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+            onChange={(e) => { onChange(e.target.value); setOpen(true); setActiveIdx(-1); }}
             onFocus={() => setOpen(true)}
+            onKeyDown={onKeyDown}
             placeholder={placeholder}
+            autoComplete="off"
             className={
               inputClassName ??
               "h-10 w-full rounded-full border border-border bg-input/60 pl-10 pr-10 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary transition-all"
@@ -95,31 +157,38 @@ function LiveSearch({
             <div className="p-4 text-sm text-muted-foreground">No results</div>
           )}
           {results && results.length > 0 && (
-            <ul className="py-2">
-              {results.map((m) => (
-                <li key={m.id}>
-                  <button
-                    onClick={() => {
-                      setOpen(false);
-                      onPick();
-                      navigate({ to: "/manga/$id", params: { id: m.id } });
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-secondary/70 transition text-left"
-                  >
-                    {m.coverUrl ? (
-                      <img src={m.coverUrl} alt="" className="h-12 w-9 rounded object-cover bg-muted" loading="lazy" />
-                    ) : (
-                      <div className="h-12 w-9 rounded bg-muted" />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">{m.title}</div>
-                      <div className="truncate text-xs text-muted-foreground">
-                        {m.tags.slice(0, 3).join(" · ") || m.status}
+            <ul ref={listRef} className="py-2">
+              {results.map((m, idx) => {
+                const active = idx === activeIdx;
+                return (
+                  <li key={m.id}>
+                    <button
+                      data-result-item
+                      onMouseEnter={() => setActiveIdx(idx)}
+                      onClick={() => {
+                        setOpen(false);
+                        onPick();
+                        navigate({ to: "/manga/$id", params: { id: m.id } });
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 transition text-left ${active ? "bg-secondary" : "hover:bg-secondary/70"}`}
+                    >
+                      {m.coverUrl ? (
+                        <img src={m.coverUrl} alt="" className="h-12 w-9 rounded object-cover bg-muted" loading="lazy" />
+                      ) : (
+                        <div className="h-12 w-9 rounded bg-muted" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium">
+                          <Highlight text={m.title} query={value} />
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">
+                          <Highlight text={m.tags.slice(0, 3).join(" · ") || m.status} query={value} />
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                </li>
-              ))}
+                    </button>
+                  </li>
+                );
+              })}
               <li>
                 <button
                   onClick={(e) => { setOpen(false); onSubmit(e as any); }}
@@ -198,7 +267,7 @@ export function Header() {
 
       {/* Sticky mobile search row — always visible on mobile */}
       <div className="sm:hidden border-t border-border/60 px-4 py-2">
-        <LiveSearch value={q} onChange={setQ} onSubmit={onSubmit} onPick={closeMenu} />
+        <LiveSearch value={q} onChange={setQ} onSubmit={onSubmit} onPick={closeMenu} autoFocus />
       </div>
 
       {/* Mobile drawer */}
