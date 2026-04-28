@@ -140,7 +140,7 @@ function LiveSearch({
             ref={inputRef}
             value={value}
             onChange={(e) => { onChange(e.target.value); setOpen(true); setActiveIdx(-1); }}
-            onFocus={() => setOpen(true)}
+            onFocus={() => { setOpen(true); inputRef.current?.focus(); }}
             onKeyDown={onKeyDown}
             placeholder={placeholder}
             autoComplete="off"
