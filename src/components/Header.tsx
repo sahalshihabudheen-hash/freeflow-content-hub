@@ -15,6 +15,28 @@ function useDebounced<T>(value: T, ms: number): T {
   return d;
 }
 
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function Highlight({ text, query }: { text: string; query: string }) {
+  const q = query.trim();
+  if (!q) return <>{text}</>;
+  const re = new RegExp(`(${escapeRegExp(q)})`, "ig");
+  const parts = text.split(re);
+  return (
+    <>
+      {parts.map((p, i) =>
+        re.test(p) && p.toLowerCase() === q.toLowerCase() ? (
+          <mark key={i} className="bg-primary/30 text-foreground rounded px-0.5">{p}</mark>
+        ) : (
+          <span key={i}>{p}</span>
+        )
+      )}
+    </>
+  );
+}
+
 function LiveSearch({
   value,
   onChange,
@@ -22,6 +44,7 @@ function LiveSearch({
   onPick,
   placeholder = "Search manga...",
   inputClassName,
+  autoFocus = false,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -29,13 +52,21 @@ function LiveSearch({
   onPick: () => void;
   placeholder?: string;
   inputClassName?: string;
+  autoFocus?: boolean;
 }) {
   const debounced = useDebounced(value, 250);
   const [results, setResults] = useState<Manga[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);
   const navigate = useNavigate();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus();
+  }, [autoFocus]);
 
   useEffect(() => {
     const q = debounced.trim();
@@ -47,7 +78,7 @@ function LiveSearch({
     let cancelled = false;
     setLoading(true);
     searchManga(q, 6)
-      .then((r) => { if (!cancelled) setResults(r); })
+      .then((r) => { if (!cancelled) { setResults(r); setActiveIdx(-1); } })
       .catch(() => { if (!cancelled) setResults([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -60,6 +91,34 @@ function LiveSearch({
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
+
+  // Scroll active item into view
+  useEffect(() => {
+    if (activeIdx < 0 || !listRef.current) return;
+    const el = listRef.current.querySelectorAll<HTMLElement>("[data-result-item]")[activeIdx];
+    el?.scrollIntoView({ block: "nearest" });
+  }, [activeIdx]);
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!results || results.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setOpen(true);
+      setActiveIdx((i) => (i + 1) % results.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setOpen(true);
+      setActiveIdx((i) => (i <= 0 ? results.length - 1 : i - 1));
+    } else if (e.key === "Enter" && activeIdx >= 0) {
+      e.preventDefault();
+      const m = results[activeIdx];
+      setOpen(false);
+      onPick();
+      navigate({ to: "/manga/$id", params: { id: m.id } });
+    } else if (e.key === "Escape") {
+      setOpen(false);
+    }
+  };
 
   const showDropdown = open && value.trim().length >= 2;
 
