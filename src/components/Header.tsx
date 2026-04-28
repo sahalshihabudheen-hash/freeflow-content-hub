@@ -86,7 +86,10 @@ function LiveSearch({
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+      if (!wrapRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+        setActiveIdx(-1);
+      }
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
@@ -109,12 +112,16 @@ function LiveSearch({
       e.preventDefault();
       setOpen(true);
       setActiveIdx((i) => (i <= 0 ? results.length - 1 : i - 1));
-    } else if (e.key === "Enter" && activeIdx >= 0) {
-      e.preventDefault();
-      const m = results[activeIdx];
-      setOpen(false);
-      onPick();
-      navigate({ to: "/manga/$id", params: { id: m.id } });
+    } else if (e.key === "Enter") {
+      const idx = activeIdx >= 0 ? activeIdx : 0;
+      const m = results[idx];
+      if (m) {
+        e.preventDefault();
+        setOpen(false);
+        setActiveIdx(-1);
+        onPick();
+        navigate({ to: "/manga/$id", params: { id: m.id } });
+      }
     } else if (e.key === "Escape") {
       e.preventDefault();
       setOpen(false);
@@ -133,7 +140,7 @@ function LiveSearch({
             ref={inputRef}
             value={value}
             onChange={(e) => { onChange(e.target.value); setOpen(true); setActiveIdx(-1); }}
-            onFocus={() => setOpen(true)}
+            onFocus={() => { setOpen(true); inputRef.current?.focus(); }}
             onKeyDown={onKeyDown}
             placeholder={placeholder}
             autoComplete="off"
@@ -151,9 +158,17 @@ function LiveSearch({
       {showDropdown && (
         <div className="absolute left-0 right-0 top-full mt-2 max-h-[70vh] overflow-y-auto rounded-2xl border border-border glass shadow-xl z-50 animate-fade-in">
           {loading && !results && (
-            <div className="p-4 text-sm text-muted-foreground flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" /> Searching…
-            </div>
+            <ul className="py-2" aria-label="Loading search results">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <li key={i} className="flex items-center gap-3 px-3 py-2 animate-pulse">
+                  <div className="h-12 w-9 rounded bg-muted" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="h-3 w-3/4 rounded bg-muted" />
+                    <div className="h-2.5 w-1/2 rounded bg-muted/70" />
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
           {results && results.length === 0 && (
             <div className="p-4 text-sm text-muted-foreground">No results</div>
