@@ -130,30 +130,48 @@ function LiveSearch({
     el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [activeIdx]);
 
+  // Restore saved scroll position when reopening with same query
+  useEffect(() => {
+    if (restoreScrollRef.current !== null && listRef.current) {
+      listRef.current.scrollTop = restoreScrollRef.current;
+      restoreScrollRef.current = null;
+    }
+  });
+
+  const closeAndOpen = (m: Manga) => {
+    if (listRef.current) savedScrollRef.current = listRef.current.scrollTop;
+    savedActiveRef.current = activeIdx;
+    setOpen(false);
+    setActiveIdx(-1);
+    setActiveViaKeyboard(false);
+    onPick();
+    navigate({ to: "/manga/$id", params: { id: m.id } });
+  };
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!results || results.length === 0) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setOpen(true);
+      setActiveViaKeyboard(true);
       setActiveIdx((i) => (i + 1) % results.length);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setOpen(true);
+      setActiveViaKeyboard(true);
       setActiveIdx((i) => (i <= 0 ? results.length - 1 : i - 1));
     } else if (e.key === "Enter") {
       const idx = activeIdx >= 0 ? activeIdx : 0;
       const m = results[idx];
       if (m) {
         e.preventDefault();
-        setOpen(false);
-        setActiveIdx(-1);
-        onPick();
-        navigate({ to: "/manga/$id", params: { id: m.id } });
+        closeAndOpen(m);
       }
     } else if (e.key === "Escape") {
       e.preventDefault();
       setOpen(false);
       setActiveIdx(-1);
+      setActiveViaKeyboard(false);
     }
   };
 
