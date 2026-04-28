@@ -158,9 +158,17 @@ function LiveSearch({
       {showDropdown && (
         <div className="absolute left-0 right-0 top-full mt-2 max-h-[70vh] overflow-y-auto rounded-2xl border border-border glass shadow-xl z-50 animate-fade-in">
           {loading && !results && (
-            <div className="p-4 text-sm text-muted-foreground flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" /> Searching…
-            </div>
+            <ul className="py-2" aria-label="Loading search results">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <li key={i} className="flex items-center gap-3 px-3 py-2 animate-pulse">
+                  <div className="h-12 w-9 rounded bg-muted" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="h-3 w-3/4 rounded bg-muted" />
+                    <div className="h-2.5 w-1/2 rounded bg-muted/70" />
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
           {results && results.length === 0 && (
             <div className="p-4 text-sm text-muted-foreground">No results</div>
