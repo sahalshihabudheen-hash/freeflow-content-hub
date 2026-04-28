@@ -78,8 +78,8 @@ function LiveSearch({
     let cancelled = false;
     setLoading(true);
     searchManga(q, 6)
-      .then((r) => { if (!cancelled) { setResults(r); setActiveIdx(-1); } })
-      .catch(() => { if (!cancelled) setResults([]); })
+      .then((r) => { if (!cancelled) { setResults(r); setActiveIdx(r.length > 0 ? 0 : -1); } })
+      .catch(() => { if (!cancelled) { setResults([]); setActiveIdx(-1); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [debounced]);
