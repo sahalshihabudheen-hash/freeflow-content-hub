@@ -95,11 +95,11 @@ function LiveSearch({
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  // Scroll active item into view
+  // Smooth-scroll active item fully into view
   useEffect(() => {
     if (activeIdx < 0 || !listRef.current) return;
     const el = listRef.current.querySelectorAll<HTMLElement>("[data-result-item]")[activeIdx];
-    el?.scrollIntoView({ block: "nearest" });
+    el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [activeIdx]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
