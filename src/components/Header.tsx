@@ -1,8 +1,140 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { Search, Shield, Menu, X, Home, Compass, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Search, Shield, Menu, X, Home, Compass, Upload, Loader2 } from "lucide-react";
 import jarvisLogo from "@/assets/jarvis-comics-logo.png";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { searchManga, type Manga } from "@/lib/mangadex";
+
+function useDebounced<T>(value: T, ms: number): T {
+  const [d, setD] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setD(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return d;
+}
+
+function LiveSearch({
+  value,
+  onChange,
+  onSubmit,
+  onPick,
+  placeholder = "Search manga...",
+  inputClassName,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onPick: () => void;
+  placeholder?: string;
+  inputClassName?: string;
+}) {
+  const debounced = useDebounced(value, 250);
+  const [results, setResults] = useState<Manga[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const q = debounced.trim();
+    if (q.length < 2) {
+      setResults(null);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    searchManga(q, 6)
+      .then((r) => { if (!cancelled) setResults(r); })
+      .catch(() => { if (!cancelled) setResults([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [debounced]);
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  const showDropdown = open && value.trim().length >= 2;
+
+  return (
+    <div ref={wrapRef} className="relative w-full">
+      <form onSubmit={onSubmit}>
+        <div className="relative group">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition group-focus-within:text-primary" />
+          <input
+            value={value}
+            onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+            onFocus={() => setOpen(true)}
+            placeholder={placeholder}
+            className={
+              inputClassName ??
+              "h-10 w-full rounded-full border border-border bg-input/60 pl-10 pr-10 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary transition-all"
+            }
+          />
+          {loading && (
+            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+          )}
+        </div>
+      </form>
+
+      {showDropdown && (
+        <div className="absolute left-0 right-0 top-full mt-2 max-h-[70vh] overflow-y-auto rounded-2xl border border-border glass shadow-xl z-50 animate-fade-in">
+          {loading && !results && (
+            <div className="p-4 text-sm text-muted-foreground flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Searching…
+            </div>
+          )}
+          {results && results.length === 0 && (
+            <div className="p-4 text-sm text-muted-foreground">No results</div>
+          )}
+          {results && results.length > 0 && (
+            <ul className="py-2">
+              {results.map((m) => (
+                <li key={m.id}>
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      onPick();
+                      navigate({ to: "/manga/$id", params: { id: m.id } });
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-secondary/70 transition text-left"
+                  >
+                    {m.coverUrl ? (
+                      <img src={m.coverUrl} alt="" className="h-12 w-9 rounded object-cover bg-muted" loading="lazy" />
+                    ) : (
+                      <div className="h-12 w-9 rounded bg-muted" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">{m.title}</div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {m.tags.slice(0, 3).join(" · ") || m.status}
+                      </div>
+                    </div>
+                  </button>
+                </li>
+              ))}
+              <li>
+                <button
+                  onClick={(e) => { setOpen(false); onSubmit(e as any); }}
+                  className="w-full px-3 py-2 text-sm text-primary hover:bg-secondary/70 transition text-left font-medium"
+                >
+                  See all results for “{value.trim()}” →
+                </button>
+              </li>
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Header() {
   const [q, setQ] = useState("");
@@ -31,17 +163,9 @@ export function Header() {
           />
         </Link>
 
-        <form onSubmit={onSubmit} className="mx-auto flex-1 max-w-xl hidden sm:block">
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition group-focus-within:text-primary" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search manga..."
-              className="h-10 w-full rounded-full border border-border bg-input/60 pl-10 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary transition-all"
-            />
-          </div>
-        </form>
+        <div className="mx-auto flex-1 max-w-xl hidden sm:block">
+          <LiveSearch value={q} onChange={setQ} onSubmit={onSubmit} onPick={closeMenu} />
+        </div>
 
         <nav className="hidden items-center gap-1 text-sm md:flex">
           <Link to="/" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }} activeOptions={{ exact: true }}>
@@ -60,6 +184,8 @@ export function Header() {
           )}
         </nav>
 
+        <ThemeToggle className="hidden sm:inline-flex" />
+
         {/* Mobile menu button */}
         <button
           onClick={() => setMobileOpen((v) => !v)}
@@ -70,21 +196,15 @@ export function Header() {
         </button>
       </div>
 
+      {/* Sticky mobile search row — always visible on mobile */}
+      <div className="sm:hidden border-t border-border/60 px-4 py-2">
+        <LiveSearch value={q} onChange={setQ} onSubmit={onSubmit} onPick={closeMenu} />
+      </div>
+
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="md:hidden border-t border-border/60 bg-background/95 backdrop-blur-xl animate-fade-in">
           <div className="container mx-auto px-4 py-4 space-y-3">
-            <form onSubmit={onSubmit}>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search manga..."
-                  className="h-11 w-full rounded-full border border-border bg-input/60 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-ring transition"
-                />
-              </div>
-            </form>
             <nav className="grid gap-1 text-sm">
               <Link to="/" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
                 <Home className="h-4 w-4 text-primary" /> Home
@@ -100,6 +220,10 @@ export function Header() {
                   <Shield className="h-4 w-4 text-primary" /> Admin
                 </Link>
               )}
+              <div className="flex items-center justify-between rounded-lg px-3 py-2 mt-2">
+                <span className="text-muted-foreground">Theme</span>
+                <ThemeToggle />
+              </div>
             </nav>
           </div>
         </div>
