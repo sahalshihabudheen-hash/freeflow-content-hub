@@ -190,7 +190,7 @@ function LiveSearch({
               </button>
             </div>
           )}
-          {results && results.length > 0 && (
+          {!loading && results && results.length > 0 && (
             <ul ref={listRef} className="py-2">
               {results.map((m, idx) => {
                 const active = idx === activeIdx;
