@@ -112,12 +112,16 @@ function LiveSearch({
       e.preventDefault();
       setOpen(true);
       setActiveIdx((i) => (i <= 0 ? results.length - 1 : i - 1));
-    } else if (e.key === "Enter" && activeIdx >= 0) {
-      e.preventDefault();
-      const m = results[activeIdx];
-      setOpen(false);
-      onPick();
-      navigate({ to: "/manga/$id", params: { id: m.id } });
+    } else if (e.key === "Enter") {
+      const idx = activeIdx >= 0 ? activeIdx : 0;
+      const m = results[idx];
+      if (m) {
+        e.preventDefault();
+        setOpen(false);
+        setActiveIdx(-1);
+        onPick();
+        navigate({ to: "/manga/$id", params: { id: m.id } });
+      }
     } else if (e.key === "Escape") {
       e.preventDefault();
       setOpen(false);
