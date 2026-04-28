@@ -139,7 +139,12 @@ function LiveSearch({
           <input
             ref={inputRef}
             value={value}
-            onChange={(e) => { onChange(e.target.value); setOpen(true); setActiveIdx(-1); }}
+            onChange={(e) => {
+              onChange(e.target.value);
+              setOpen(true);
+              setActiveIdx(-1);
+              if (e.target.value.trim().length >= 2) setLoading(true);
+            }}
             onFocus={() => { setOpen(true); inputRef.current?.focus(); }}
             onKeyDown={onKeyDown}
             placeholder={placeholder}
