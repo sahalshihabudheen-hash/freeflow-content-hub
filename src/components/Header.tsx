@@ -72,6 +72,8 @@ function LiveSearch({
     if (autoFocus) inputRef.current?.focus();
   }, [autoFocus]);
 
+  const lastQueryRef = useRef<string>("");
+
   useEffect(() => {
     const q = debounced.trim();
     if (q.length < 2) {
@@ -79,14 +81,27 @@ function LiveSearch({
       setLoading(false);
       return;
     }
+    // Same query as last fetch → keep results, restore active + scroll
+    if (q === lastQueryRef.current && results && results.length > 0) {
+      setLoading(false);
+      if (savedActiveRef.current >= 0) setActiveIdx(savedActiveRef.current);
+      restoreScrollRef.current = savedScrollRef.current;
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     searchManga(q, 6)
-      .then((r) => { if (!cancelled) { setResults(r); setActiveIdx(r.length > 0 ? 0 : -1); } })
+      .then((r) => {
+        if (cancelled) return;
+        lastQueryRef.current = q;
+        setResults(r);
+        setActiveIdx(r.length > 0 ? 0 : -1);
+        setActiveViaKeyboard(false);
+      })
       .catch(() => { if (!cancelled) { setResults([]); setActiveIdx(-1); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [debounced]);
+  }, [debounced, open]);
 
   // Close + reset on outside click/tap (desktop + mobile)
   useEffect(() => {
