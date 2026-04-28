@@ -59,14 +59,20 @@ function LiveSearch({
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
+  const [activeViaKeyboard, setActiveViaKeyboard] = useState(false);
   const navigate = useNavigate();
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const savedScrollRef = useRef(0);
+  const savedActiveRef = useRef(-1);
+  const restoreScrollRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (autoFocus) inputRef.current?.focus();
   }, [autoFocus]);
+
+  const lastQueryRef = useRef<string>("");
 
   useEffect(() => {
     const q = debounced.trim();
@@ -75,24 +81,46 @@ function LiveSearch({
       setLoading(false);
       return;
     }
+    // Same query as last fetch → keep results, restore active + scroll
+    if (q === lastQueryRef.current && results && results.length > 0) {
+      setLoading(false);
+      if (savedActiveRef.current >= 0) setActiveIdx(savedActiveRef.current);
+      restoreScrollRef.current = savedScrollRef.current;
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     searchManga(q, 6)
-      .then((r) => { if (!cancelled) { setResults(r); setActiveIdx(r.length > 0 ? 0 : -1); } })
+      .then((r) => {
+        if (cancelled) return;
+        lastQueryRef.current = q;
+        setResults(r);
+        setActiveIdx(r.length > 0 ? 0 : -1);
+        setActiveViaKeyboard(false);
+      })
       .catch(() => { if (!cancelled) { setResults([]); setActiveIdx(-1); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [debounced]);
+  }, [debounced, open]);
 
+  // Close + reset on outside click/tap (desktop + mobile)
   useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
+    const onOutside = (e: Event) => {
       if (!wrapRef.current?.contains(e.target as Node)) {
+        // Persist scroll/active before closing so we can restore on reopen
+        if (listRef.current) savedScrollRef.current = listRef.current.scrollTop;
+        savedActiveRef.current = -1;
         setOpen(false);
         setActiveIdx(-1);
+        setActiveViaKeyboard(false);
       }
     };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    document.addEventListener("mousedown", onOutside);
+    document.addEventListener("touchstart", onOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onOutside);
+      document.removeEventListener("touchstart", onOutside);
+    };
   }, []);
 
   // Smooth-scroll active item fully into view
@@ -102,30 +130,48 @@ function LiveSearch({
     el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [activeIdx]);
 
+  // Restore saved scroll position when reopening with same query
+  useEffect(() => {
+    if (restoreScrollRef.current !== null && listRef.current) {
+      listRef.current.scrollTop = restoreScrollRef.current;
+      restoreScrollRef.current = null;
+    }
+  });
+
+  const closeAndOpen = (m: Manga) => {
+    if (listRef.current) savedScrollRef.current = listRef.current.scrollTop;
+    savedActiveRef.current = activeIdx;
+    setOpen(false);
+    setActiveIdx(-1);
+    setActiveViaKeyboard(false);
+    onPick();
+    navigate({ to: "/manga/$id", params: { id: m.id } });
+  };
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!results || results.length === 0) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setOpen(true);
+      setActiveViaKeyboard(true);
       setActiveIdx((i) => (i + 1) % results.length);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setOpen(true);
+      setActiveViaKeyboard(true);
       setActiveIdx((i) => (i <= 0 ? results.length - 1 : i - 1));
     } else if (e.key === "Enter") {
       const idx = activeIdx >= 0 ? activeIdx : 0;
       const m = results[idx];
       if (m) {
         e.preventDefault();
-        setOpen(false);
-        setActiveIdx(-1);
-        onPick();
-        navigate({ to: "/manga/$id", params: { id: m.id } });
+        closeAndOpen(m);
       }
     } else if (e.key === "Escape") {
       e.preventDefault();
       setOpen(false);
       setActiveIdx(-1);
+      setActiveViaKeyboard(false);
     }
   };
 
@@ -198,12 +244,8 @@ function LiveSearch({
                   <li key={m.id}>
                     <button
                       data-result-item
-                      onMouseEnter={() => setActiveIdx(idx)}
-                      onClick={() => {
-                        setOpen(false);
-                        onPick();
-                        navigate({ to: "/manga/$id", params: { id: m.id } });
-                      }}
+                      onMouseEnter={() => { setActiveIdx(idx); setActiveViaKeyboard(false); }}
+                      onClick={() => closeAndOpen(m)}
                       className={`w-full flex items-center gap-3 px-3 py-2 transition text-left border-l-2 ${active ? "bg-primary/15 border-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.3)] ring-1 ring-primary/40" : "border-transparent hover:bg-secondary/70"}`}
                     >
                       {m.coverUrl ? (
@@ -213,10 +255,14 @@ function LiveSearch({
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">
-                          <Highlight text={m.title} query={value} />
+                          {active && activeViaKeyboard
+                            ? <Highlight text={m.title} query={value} />
+                            : m.title}
                         </div>
                         <div className="truncate text-xs text-muted-foreground">
-                          <Highlight text={m.tags.slice(0, 3).join(" · ") || m.status} query={value} />
+                          {active && activeViaKeyboard
+                            ? <Highlight text={m.tags.slice(0, 3).join(" · ") || m.status} query={value} />
+                            : (m.tags.slice(0, 3).join(" · ") || m.status)}
                         </div>
                       </div>
                     </button>
