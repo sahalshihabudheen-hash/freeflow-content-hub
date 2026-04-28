@@ -156,8 +156,8 @@ function LiveSearch({
       </form>
 
       {showDropdown && (
-        <div className="absolute left-0 right-0 top-full mt-2 max-h-[70vh] overflow-y-auto rounded-2xl border border-border glass shadow-xl z-50 animate-fade-in">
-          {loading && !results && (
+        <div className="absolute left-0 right-0 top-full mt-2 max-h-[70vh] overflow-y-auto scroll-smooth rounded-2xl border border-border glass shadow-xl z-50 animate-fade-in">
+          {loading && (
             <ul className="py-2" aria-label="Loading search results">
               {Array.from({ length: 5 }).map((_, i) => (
                 <li key={i} className="flex items-center gap-3 px-3 py-2 animate-pulse">
@@ -170,8 +170,20 @@ function LiveSearch({
               ))}
             </ul>
           )}
-          {results && results.length === 0 && (
-            <div className="p-4 text-sm text-muted-foreground">No results</div>
+          {!loading && results && results.length === 0 && (
+            <div className="p-6 text-center space-y-3">
+              <div className="text-sm font-medium text-foreground">No results found</div>
+              <div className="text-xs text-muted-foreground">
+                We couldn't find anything for “{value.trim()}”. Try a different title or keyword.
+              </div>
+              <button
+                type="button"
+                onClick={() => { onChange(""); setActiveIdx(-1); inputRef.current?.focus(); }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 transition"
+              >
+                Clear & search again
+              </button>
+            </div>
           )}
           {results && results.length > 0 && (
             <ul ref={listRef} className="py-2">
