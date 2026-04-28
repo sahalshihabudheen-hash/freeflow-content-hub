@@ -116,7 +116,9 @@ function LiveSearch({
       onPick();
       navigate({ to: "/manga/$id", params: { id: m.id } });
     } else if (e.key === "Escape") {
+      e.preventDefault();
       setOpen(false);
+      setActiveIdx(-1);
     }
   };
 
