@@ -128,10 +128,13 @@ function LiveSearch({
         <div className="relative group">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition group-focus-within:text-primary" />
           <input
+            ref={inputRef}
             value={value}
-            onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+            onChange={(e) => { onChange(e.target.value); setOpen(true); setActiveIdx(-1); }}
             onFocus={() => setOpen(true)}
+            onKeyDown={onKeyDown}
             placeholder={placeholder}
+            autoComplete="off"
             className={
               inputClassName ??
               "h-10 w-full rounded-full border border-border bg-input/60 pl-10 pr-10 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary transition-all"
