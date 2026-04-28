@@ -157,31 +157,38 @@ function LiveSearch({
             <div className="p-4 text-sm text-muted-foreground">No results</div>
           )}
           {results && results.length > 0 && (
-            <ul className="py-2">
-              {results.map((m) => (
-                <li key={m.id}>
-                  <button
-                    onClick={() => {
-                      setOpen(false);
-                      onPick();
-                      navigate({ to: "/manga/$id", params: { id: m.id } });
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-secondary/70 transition text-left"
-                  >
-                    {m.coverUrl ? (
-                      <img src={m.coverUrl} alt="" className="h-12 w-9 rounded object-cover bg-muted" loading="lazy" />
-                    ) : (
-                      <div className="h-12 w-9 rounded bg-muted" />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">{m.title}</div>
-                      <div className="truncate text-xs text-muted-foreground">
-                        {m.tags.slice(0, 3).join(" · ") || m.status}
+            <ul ref={listRef} className="py-2">
+              {results.map((m, idx) => {
+                const active = idx === activeIdx;
+                return (
+                  <li key={m.id}>
+                    <button
+                      data-result-item
+                      onMouseEnter={() => setActiveIdx(idx)}
+                      onClick={() => {
+                        setOpen(false);
+                        onPick();
+                        navigate({ to: "/manga/$id", params: { id: m.id } });
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 transition text-left ${active ? "bg-secondary" : "hover:bg-secondary/70"}`}
+                    >
+                      {m.coverUrl ? (
+                        <img src={m.coverUrl} alt="" className="h-12 w-9 rounded object-cover bg-muted" loading="lazy" />
+                      ) : (
+                        <div className="h-12 w-9 rounded bg-muted" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium">
+                          <Highlight text={m.title} query={value} />
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">
+                          <Highlight text={m.tags.slice(0, 3).join(" · ") || m.status} query={value} />
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                </li>
-              ))}
+                    </button>
+                  </li>
+                );
+              })}
               <li>
                 <button
                   onClick={(e) => { setOpen(false); onSubmit(e as any); }}
