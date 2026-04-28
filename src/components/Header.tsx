@@ -172,7 +172,7 @@ function LiveSearch({
                         onPick();
                         navigate({ to: "/manga/$id", params: { id: m.id } });
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 transition text-left ${active ? "bg-secondary" : "hover:bg-secondary/70"}`}
+                      className={`w-full flex items-center gap-3 px-3 py-2 transition text-left border-l-2 ${active ? "bg-primary/15 border-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.3)] ring-1 ring-primary/40" : "border-transparent hover:bg-secondary/70"}`}
                     >
                       {m.coverUrl ? (
                         <img src={m.coverUrl} alt="" className="h-12 w-9 rounded object-cover bg-muted" loading="lazy" />
