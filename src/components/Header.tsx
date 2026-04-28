@@ -88,15 +88,24 @@ function LiveSearch({
     return () => { cancelled = true; };
   }, [debounced]);
 
+  // Close + reset on outside click/tap (desktop + mobile)
   useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
+    const onOutside = (e: Event) => {
       if (!wrapRef.current?.contains(e.target as Node)) {
+        // Persist scroll/active before closing so we can restore on reopen
+        if (listRef.current) savedScrollRef.current = listRef.current.scrollTop;
+        savedActiveRef.current = -1;
         setOpen(false);
         setActiveIdx(-1);
+        setActiveViaKeyboard(false);
       }
     };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    document.addEventListener("mousedown", onOutside);
+    document.addEventListener("touchstart", onOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onOutside);
+      document.removeEventListener("touchstart", onOutside);
+    };
   }, []);
 
   // Smooth-scroll active item fully into view
