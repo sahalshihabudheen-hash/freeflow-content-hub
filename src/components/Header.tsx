@@ -244,12 +244,8 @@ function LiveSearch({
                   <li key={m.id}>
                     <button
                       data-result-item
-                      onMouseEnter={() => setActiveIdx(idx)}
-                      onClick={() => {
-                        setOpen(false);
-                        onPick();
-                        navigate({ to: "/manga/$id", params: { id: m.id } });
-                      }}
+                      onMouseEnter={() => { setActiveIdx(idx); setActiveViaKeyboard(false); }}
+                      onClick={() => closeAndOpen(m)}
                       className={`w-full flex items-center gap-3 px-3 py-2 transition text-left border-l-2 ${active ? "bg-primary/15 border-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.3)] ring-1 ring-primary/40" : "border-transparent hover:bg-secondary/70"}`}
                     >
                       {m.coverUrl ? (
@@ -259,10 +255,14 @@ function LiveSearch({
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">
-                          <Highlight text={m.title} query={value} />
+                          {active && activeViaKeyboard
+                            ? <Highlight text={m.title} query={value} />
+                            : m.title}
                         </div>
                         <div className="truncate text-xs text-muted-foreground">
-                          <Highlight text={m.tags.slice(0, 3).join(" · ") || m.status} query={value} />
+                          {active && activeViaKeyboard
+                            ? <Highlight text={m.tags.slice(0, 3).join(" · ") || m.status} query={value} />
+                            : (m.tags.slice(0, 3).join(" · ") || m.status)}
                         </div>
                       </div>
                     </button>
