@@ -1,8 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Search, Shield, Menu, X, Home, Compass, Upload, Loader2, AlertCircle, SlidersHorizontal, SearchX } from "lucide-react";
+import { Search, Menu, X, Home, Compass, BookOpen, Loader2, AlertCircle, SlidersHorizontal, SearchX } from "lucide-react";
 import jarvisLogo from "@/assets/jarvis-comics-logo.png";
-import { useIsAdmin } from "@/hooks/use-is-admin";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchManga, type Manga } from "@/lib/mangadex";
 import { logSearch, logClick } from "@/lib/search-analytics";
@@ -429,7 +428,6 @@ export function Header() {
   const [q, setQ] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAdmin } = useIsAdmin();
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -463,17 +461,9 @@ export function Header() {
           <Link to="/search" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }}>
             Browse
           </Link>
-          <Link to="/upload" className="rounded-full px-3 py-2 text-primary font-medium transition hover:bg-secondary" activeProps={{ className: "rounded-full px-3 py-2 text-primary bg-secondary font-medium" }}>
-            Upload
-          </Link>
           <Link to="/adult" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }}>
             Mature
           </Link>
-          {isAdmin && (
-            <Link to="/admin" className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-foreground font-medium transition hover:bg-secondary" activeProps={{ className: "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-foreground bg-secondary font-medium" }}>
-              <Shield className="h-4 w-4" /> Admin
-            </Link>
-          )}
         </nav>
 
         <ThemeToggle className="hidden sm:inline-flex" />
@@ -501,17 +491,9 @@ export function Header() {
               <Link to="/search" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
                 <Compass className="h-4 w-4 text-primary" /> Browse
               </Link>
-              <Link to="/upload" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
-                <Upload className="h-4 w-4 text-primary" /> Upload
-              </Link>
               <Link to="/adult" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
-                <Compass className="h-4 w-4 text-destructive" /> Mature Hub
+                <BookOpen className="h-4 w-4 text-destructive" /> Mature Hub
               </Link>
-              {isAdmin && (
-                <Link to="/admin" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
-                  <Shield className="h-4 w-4 text-primary" /> Admin
-                </Link>
-              )}
               <div className="flex items-center justify-between rounded-lg px-3 py-2 mt-2">
                 <span className="text-muted-foreground">Theme</span>
                 <ThemeToggle />

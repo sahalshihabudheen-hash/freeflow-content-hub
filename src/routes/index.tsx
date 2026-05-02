@@ -11,8 +11,6 @@ import {
 } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
 import { PreferencesModal, type Prefs } from "@/components/PreferencesModal";
-import { SignupPrompt } from "@/components/SignupPrompt";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2, SlidersHorizontal } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -28,7 +26,6 @@ export const Route = createFileRoute("/")({
 });
 
 const PREFS_KEY = "jarvis.prefs.v1";
-const SIGNUP_PROMPT_KEY = "jarvis.signupPromptShown.v1";
 
 function loadPrefs(): Prefs | null {
   if (typeof window === "undefined") return null;
@@ -44,27 +41,12 @@ function loadPrefs(): Prefs | null {
 function Index() {
   const [prefs, setPrefs] = useState<Prefs | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
   const [popular, setPopular] = useState<Manga[] | null>(null);
   const [recent, setRecent] = useState<Manga[] | null>(null);
   const [topRated, setTopRated] = useState<Manga[] | null>(null);
   const [newReleases, setNewReleases] = useState<Manga[] | null>(null);
   const [genreSections, setGenreSections] = useState<Record<string, Manga[]>>({});
   const [error, setError] = useState<string | null>(null);
-
-  // First-visit signup prompt: show after a short delay if user is not logged in
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (localStorage.getItem(SIGNUP_PROMPT_KEY)) return;
-    const timer = setTimeout(async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        setShowSignup(true);
-        localStorage.setItem(SIGNUP_PROMPT_KEY, "1");
-      }
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, []);
 
   // On mount: load saved prefs or open modal
   useEffect(() => {
@@ -126,8 +108,6 @@ function Index() {
           canClose={!!prefs}
         />
       )}
-
-      {showSignup && <SignupPrompt onClose={() => setShowSignup(false)} />}
 
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-border">
