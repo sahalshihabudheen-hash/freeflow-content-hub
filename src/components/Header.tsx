@@ -466,9 +466,6 @@ export function Header() {
           <Link to="/upload" className="rounded-full px-3 py-2 text-primary font-medium transition hover:bg-secondary" activeProps={{ className: "rounded-full px-3 py-2 text-primary bg-secondary font-medium" }}>
             Upload
           </Link>
-          <Link to="/adult" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }}>
-            Mature
-          </Link>
           {isAdmin && (
             <Link to="/admin" className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-foreground font-medium transition hover:bg-secondary" activeProps={{ className: "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-foreground bg-secondary font-medium" }}>
               <Shield className="h-4 w-4" /> Admin
@@ -503,9 +500,6 @@ export function Header() {
               </Link>
               <Link to="/upload" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
                 <Upload className="h-4 w-4 text-primary" /> Upload
-              </Link>
-              <Link to="/adult" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
-                <Compass className="h-4 w-4 text-destructive" /> Mature Hub
               </Link>
               {isAdmin && (
                 <Link to="/admin" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
