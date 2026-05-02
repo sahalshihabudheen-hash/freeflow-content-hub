@@ -11,7 +11,7 @@ function proxiedImage(url: string): string {
 
 // Strict SFW: only "safe" content rating, exclude all suggestive/erotica/porn
 const SFW_PARAMS = "contentRating[]=safe";
-const NSFW_PARAMS = "contentRating[]=erotica&contentRating[]=pornographic";
+const NSFW_PARAMS = "contentRating[]=erotica&contentRating[]=pornographic&availableTranslatedLanguage[]=en";
 
 export type Manga = {
   id: string;
