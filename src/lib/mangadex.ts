@@ -11,6 +11,7 @@ function proxiedImage(url: string): string {
 
 // Strict SFW: only "safe" content rating, exclude all suggestive/erotica/porn
 const SFW_PARAMS = "contentRating[]=safe";
+const NSFW_PARAMS = "contentRating[]=erotica&contentRating[]=pornographic";
 
 export type Manga = {
   id: string;
@@ -165,6 +166,15 @@ export async function searchManga(query: string, limit = 30): Promise<Manga[]> {
   const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&title=${encodeURIComponent(query)}&includes[]=cover_art&order[relevance]=desc`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Search failed");
+  const json = await res.json();
+  return json.data.map(mapManga);
+}
+
+export async function getMatureContent(limit = 24, genres?: string[], language?: string): Promise<Manga[]> {
+  const filters = buildFilterParams(genres, language);
+  const url = `${API}/manga?${NSFW_PARAMS}&limit=${limit}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch mature content");
   const json = await res.json();
   return json.data.map(mapManga);
 }
