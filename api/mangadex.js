@@ -1,7 +1,6 @@
 export default async function handler(req, res) {
-  const { path } = req.query;
-  const pathStr = Array.isArray(path) ? path.join('/') : (path || '');
   const url = new URL(req.url, 'http://localhost');
+  const pathStr = url.pathname.replace(/^\/api\/mangadex\/?/, '');
   const target = `https://api.mangadex.org/${pathStr}${url.search}`;
 
   try {

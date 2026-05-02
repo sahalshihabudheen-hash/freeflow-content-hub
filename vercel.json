@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/api/mangadex/(.*)", "destination": "/api/mangadex.js" },
+    { "source": "/api/covers/(.*)", "destination": "/api/covers.js" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

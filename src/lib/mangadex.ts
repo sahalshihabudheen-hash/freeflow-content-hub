@@ -1,8 +1,8 @@
 // MangaDex API client (SFW only)
 // Docs: https://api.mangadex.org/docs/
 
-// Use same-origin image proxy so reading stays inside the app
-const API = "https://api.mangadex.org";
+// Use same-origin API/image proxies so reading stays inside the app
+const API = "/api/mangadex";
 const IMAGE_PROXY = "/api/image?url=";
 
 function proxiedImage(url: string): string {
