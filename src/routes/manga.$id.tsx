@@ -133,27 +133,50 @@ function MangaDetail() {
           </p>
         ) : (
           <div className="grid gap-2">
-            {chapters.map((c) => (
-              <Link
-                key={c.id}
-                to="/chapter/$id"
-                params={{ id: c.id }}
-                search={{ manga: id }}
-                className="flex items-center justify-between gap-4 p-4 rounded-lg border border-border bg-card hover:bg-secondary hover:border-primary/40 transition"
-              >
-                <div className="min-w-0">
-                  <div className="font-medium">
-                    Chapter {c.chapter ?? "—"}{c.title ? ` · ${c.title}` : ""}
+            {chapters.map((c: any) => {
+              const content = (
+                <>
+                  <div className="min-w-0">
+                    <div className="font-medium">
+                      Chapter {c.chapter ?? "—"}{c.title ? ` · ${c.title}` : ""}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate flex items-center gap-2">
+                      <span>{c.scanlator} · {langLabel(c.language)}</span>
+                      {c.externalUrl && <span className="uppercase border border-border rounded px-1 text-[9px]">External</span>}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {c.scanlator} · {langLabel(c.language)}
+                  <div className="text-xs text-muted-foreground shrink-0">
+                    {c.externalUrl ? "Link" : `${c.pages} pages`}
                   </div>
-                </div>
-                <div className="text-xs text-muted-foreground shrink-0">
-                  {c.pages} pages
-                </div>
-              </Link>
-            ))}
+                </>
+              );
+
+              if (c.externalUrl) {
+                return (
+                  <a
+                    key={c.id}
+                    href={c.externalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between gap-4 p-4 rounded-lg border border-border bg-card hover:bg-secondary hover:border-primary/40 transition"
+                  >
+                    {content}
+                  </a>
+                );
+              }
+
+              return (
+                <Link
+                  key={c.id}
+                  to="/chapter/$id"
+                  params={{ id: c.id }}
+                  search={{ manga: id }}
+                  className="flex items-center justify-between gap-4 p-4 rounded-lg border border-border bg-card hover:bg-secondary hover:border-primary/40 transition"
+                >
+                  {content}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
