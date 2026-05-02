@@ -44,6 +44,45 @@ export type Database = {
         }
         Relationships: []
       }
+      search_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          manga_id: string | null
+          manga_title: string | null
+          position: number | null
+          query: string
+          results_count: number | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          manga_id?: string | null
+          manga_title?: string | null
+          position?: number | null
+          query: string
+          results_count?: number | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          manga_id?: string | null
+          manga_title?: string | null
+          position?: number | null
+          query?: string
+          results_count?: number | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_chapters: {
         Row: {
           comic_id: string
