@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getMatureContent, type Manga as MangaDexManga } from "@/lib/mangadex";
-import { getComickAdult } from "@/lib/comick";
+import { getMatureContent, type Manga } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
 import { Loader2 } from "lucide-react";
 
@@ -10,23 +9,20 @@ export const Route = createFileRoute("/adult")({
 });
 
 function AdultHub() {
-  const [source, setSource] = useState<"mangadex" | "comick">("mangadex");
-  const [manga, setManga] = useState<MangaDexManga[] | null>(null);
+  const [source, setSource] = useState<"manga" | "manhwa">("manga");
+  const [mangaList, setMangaList] = useState<Manga[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setManga(null);
+    setMangaList(null);
     setError(null);
     
-    if (source === "mangadex") {
-      getMatureContent(48)
-        .then(setManga)
-        .catch((e) => setError(e.message));
-    } else {
-      getComickAdult(48)
-        .then(setManga)
-        .catch((e) => setError("Comick.io access might be blocked by Cloudflare. " + e.message));
-    }
+    // originalLanguage: ja = Japanese (Manga), ko = Korean (Manhwa)
+    const origLang = source === "manga" ? "ja" : "ko";
+    
+    getMatureContent(48, undefined, undefined, origLang)
+      .then(setMangaList)
+      .catch((e) => setError("Failed to fetch content. " + e.message));
   }, [source]);
 
   return (
@@ -40,20 +36,20 @@ function AdultHub() {
 
       <div className="flex justify-center gap-2">
         <button
-          onClick={() => setSource("mangadex")}
+          onClick={() => setSource("manga")}
           className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-            source === "mangadex" ? "bg-primary text-primary-foreground shadow-lg" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            source === "manga" ? "bg-primary text-primary-foreground shadow-lg" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
           }`}
         >
-          Manga (MangaDex)
+          Adult Manga
         </button>
         <button
-          onClick={() => setSource("comick")}
+          onClick={() => setSource("manhwa")}
           className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-            source === "comick" ? "bg-primary text-primary-foreground shadow-lg" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            source === "manhwa" ? "bg-primary text-primary-foreground shadow-lg" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
           }`}
         >
-          Manhwa (Comick.io)
+          Adult Manhwa
         </button>
       </div>
 
@@ -64,15 +60,15 @@ function AdultHub() {
         </div>
       )}
 
-      {manga === null && !error ? (
+      {mangaList === null && !error ? (
         <div className="flex justify-center py-24">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : manga?.length === 0 ? (
-        <div className="text-center text-muted-foreground py-12">No mature content found for this source.</div>
-      ) : manga ? (
+      ) : mangaList?.length === 0 ? (
+        <div className="text-center text-muted-foreground py-12">No mature content found for this category.</div>
+      ) : mangaList ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 animate-fade-in">
-          {manga.map((m) => (
+          {mangaList.map((m) => (
             <MangaCard key={m.id} manga={m} />
           ))}
         </div>

@@ -2,9 +2,12 @@ import { Link } from "@tanstack/react-router";
 import type { Manga } from "@/lib/mangadex";
 
 export function MangaCard({ manga }: { manga: Manga }) {
-  const isComick = manga.id.startsWith("comick-");
-  const CardContent = (
-    <>
+  return (
+    <Link
+      to="/manga/$id"
+      params={{ id: manga.id }}
+      className="group flex flex-col gap-2 animate-fade-in"
+    >
       <div
         className="relative aspect-[2/3] overflow-hidden rounded-xl border border-border bg-muted transition-all duration-500 group-hover:border-primary/60 group-hover:shadow-[0_20px_40px_-12px_oklch(0.7_0.22_250_/_0.5)] group-hover:-translate-y-1 active:scale-[0.98]"
         style={{ boxShadow: "var(--shadow-card)" }}
@@ -34,33 +37,9 @@ export function MangaCard({ manga }: { manga: Manga }) {
           </div>
         )}
       </div>
-      <h3 className="line-clamp-2 text-sm font-medium text-foreground group-hover:text-primary transition-colors mt-2">
+      <h3 className="line-clamp-2 text-sm font-medium text-foreground group-hover:text-primary transition-colors">
         {manga.title}
-        {isComick && <span className="ml-1 text-[10px] uppercase text-muted-foreground border border-border px-1 rounded">External</span>}
       </h3>
-    </>
-  );
-
-  if (isComick) {
-    return (
-      <a
-        href={`https://comick.io/comic/${manga.id.replace("comick-", "")}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex flex-col animate-fade-in"
-      >
-        {CardContent}
-      </a>
-    );
-  }
-
-  return (
-    <Link
-      to="/manga/$id"
-      params={{ id: manga.id }}
-      className="group flex flex-col animate-fade-in"
-    >
-      {CardContent}
     </Link>
   );
 }

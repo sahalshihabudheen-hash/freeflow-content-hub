@@ -170,9 +170,10 @@ export async function searchManga(query: string, limit = 30): Promise<Manga[]> {
   return json.data.map(mapManga);
 }
 
-export async function getMatureContent(limit = 24, genres?: string[], language?: string): Promise<Manga[]> {
+export async function getMatureContent(limit = 24, genres?: string[], language?: string, originalLanguage?: string): Promise<Manga[]> {
   const filters = buildFilterParams(genres, language);
-  const url = `${API}/manga?${NSFW_PARAMS}&limit=${limit}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
+  const origLangParam = originalLanguage ? `&originalLanguage[]=${originalLanguage}` : "";
+  const url = `${API}/manga?${NSFW_PARAMS}&limit=${limit}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${origLangParam}${filters ? `&${filters}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch mature content");
   const json = await res.json();
