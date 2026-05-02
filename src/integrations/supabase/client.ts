@@ -3,15 +3,37 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 function createSupabaseClient() {
-  // Use import.meta.env for client-side (Vite build-time replacement)
-  // Fall back to process.env for SSR (server-side rendering)
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    throw new Error(
-      'Missing Supabase environment variables. Ensure SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (or VITE_ prefixed versions) are set in your .env file.'
-    );
+    console.warn('Supabase credentials missing. Some features like authentication and uploads will be disabled.');
+    // Return a dummy object to prevent crashes
+    return {
+      auth: {
+        getSession: async () => ({ data: { session: null }, error: null }),
+        getUser: async () => ({ data: { user: null }, error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+        signOut: async () => {},
+      },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            order: () => Promise.resolve({ data: [], error: null }),
+            maybeSingle: () => Promise.resolve({ data: null, error: null }),
+          }),
+        }),
+        insert: () => Promise.resolve({ data: null, error: null }),
+        update: () => Promise.resolve({ data: null, error: null }),
+        delete: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
+      }),
+      storage: {
+        from: () => ({
+          getPublicUrl: () => ({ data: { publicUrl: '' } }),
+          upload: async () => ({ data: null, error: null }),
+        }),
+      },
+    } as any;
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
