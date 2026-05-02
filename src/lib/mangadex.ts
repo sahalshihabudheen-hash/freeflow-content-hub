@@ -12,6 +12,7 @@ function proxiedImage(url: string): string {
 // Strict SFW: only "safe" content rating, exclude all suggestive/erotica/porn
 const SFW_PARAMS = "contentRating[]=safe";
 const NSFW_PARAMS = "contentRating[]=erotica&contentRating[]=pornographic&availableTranslatedLanguage[]=en";
+const ALL_CONTENT_PARAMS = "contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic";
 
 export type Manga = {
   id: string;
@@ -190,7 +191,7 @@ export async function getManga(id: string): Promise<Manga> {
 
 export async function getChapters(mangaId: string, limit = 200, language?: string): Promise<Chapter[]> {
   const langParam = language ? `&translatedLanguage[]=${language}` : "";
-  const url = `${API}/manga/${mangaId}/feed?limit=${limit}${langParam}&order[chapter]=asc&${SFW_PARAMS}&includes[]=scanlation_group&includeExternalUrl=0`;
+  const url = `${API}/manga/${mangaId}/feed?limit=${limit}${langParam}&order[chapter]=asc&${ALL_CONTENT_PARAMS}&includes[]=scanlation_group&includeExternalUrl=0`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to load chapters");
   const json = await res.json();
