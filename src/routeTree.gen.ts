@@ -21,6 +21,7 @@ import { Route as ChapterIdRouteImport } from './routes/chapter.$id'
 import { Route as ApiImageRouteImport } from './routes/api.image'
 import { Route as ApiMangadexSplatRouteImport } from './routes/api.mangadex.$'
 import { Route as ApiCoversSplatRouteImport } from './routes/api.covers.$'
+import { Route as AdultRouteImport } from './routes/adult'
 
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
@@ -45,6 +46,11 @@ const AdminRoute = AdminRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdultRoute = AdultRouteImport.update({
+  id: '/adult',
+  path: '/adult',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyComicIdRoute = MyComicIdRouteImport.update({
@@ -86,6 +92,7 @@ const ApiCoversSplatRoute = ApiCoversSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/adult': typeof AdultRoute
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/adult': typeof AdultRoute
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/adult': typeof AdultRoute
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/adult'
     | '/auth'
     | '/search'
     | '/upload'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/adult'
     | '/auth'
     | '/search'
     | '/upload'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/adult'
     | '/auth'
     | '/search'
     | '/upload'
@@ -173,6 +185,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdultRoute: typeof AdultRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   SearchRoute: typeof SearchRoute
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/adult': {
+      id: '/adult'
+      path: '/adult'
+      fullPath: '/adult'
+      preLoaderRoute: typeof AdultRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-comic/$id': {
@@ -277,6 +297,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdultRoute: AdultRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   SearchRoute: SearchRoute,
