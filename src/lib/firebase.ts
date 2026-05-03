@@ -5,7 +5,7 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyD7QSHYiqWMYwTAHD-fGONuZ1qqGBc9BSA",
+  apiKey: "AIzaSyD7QSHYiqWMYWTAHD-fGONuZ1qqGBc9BSA",
   authDomain: "jarvis-comics.firebaseapp.com",
   projectId: "jarvis-comics",
   storageBucket: "jarvis-comics.firebasestorage.app",
