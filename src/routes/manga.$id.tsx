@@ -2,24 +2,10 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { getManga, getChapters, getAvailableLanguages, LANGUAGES, type Manga, type Chapter } from "@/lib/mangadex";
 import { logViewManga } from "@/lib/search-analytics";
-import { Loader2, BookOpen, Calendar, Languages } from "lucide-react";
+import { Loader2, BookOpen, Calendar, Languages, Share2, Check } from "lucide-react";
 
 export const Route = createFileRoute("/manga/$id")({
   component: MangaDetail,
-  errorComponent: ({ error, reset }) => {
-    const router = useRouter();
-    return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <p className="text-destructive mb-4">{error.message}</p>
-        <button
-          onClick={() => { router.invalidate(); reset(); }}
-          className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  },
 });
 
 function MangaDetail() {
@@ -29,12 +15,33 @@ function MangaDetail() {
   const [availableLangs, setAvailableLangs] = useState<string[]>([]);
   const [selectedLang, setSelectedLang] = useState<string>("en");
   const [langInitialized, setLangInitialized] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     getManga(id).then((m) => {
       setManga(m);
       const isAdult = m.contentRating === "pornographic" || m.contentRating === "erotica";
       logViewManga(id, m.title, isAdult).catch(() => {});
+      
+      // Update document head for social sharing
+      document.title = `${m.title} — JARVIS COMICS`;
+      const meta = {
+        "og:title": m.title,
+        "og:description": m.description?.slice(0, 160),
+        "og:image": m.coverUrl,
+        "og:type": "website",
+        "twitter:card": "summary_large_image"
+      };
+      Object.entries(meta).forEach(([key, val]) => {
+        let el = document.querySelector(`meta[property="${key}"]`) || document.querySelector(`meta[name="${key}"]`);
+        if (!el) {
+          el = document.createElement("meta");
+          if (key.startsWith("og:")) el.setAttribute("property", key);
+          else el.setAttribute("name", key);
+          document.head.appendChild(el);
+        }
+        el.setAttribute("content", val || "");
+      });
     }).catch(() => {});
     
     getAvailableLanguages(id).then((langs) => {
@@ -51,6 +58,23 @@ function MangaDetail() {
     setChapters(null);
     getChapters(id, 200, selectedLang).then(setChapters).catch(() => setChapters([]));
   }, [id, selectedLang, langInitialized]);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: manga?.title,
+      text: `Read ${manga?.title} on JARVIS COMICS!`,
+      url: window.location.href,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (e) {}
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const langLabel = useMemo(
     () => (code: string) => LANGUAGES[code] ?? code.toUpperCase(),

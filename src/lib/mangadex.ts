@@ -83,6 +83,12 @@ export const GENRE_TAGS: Record<string, string> = {
   Supernatural: "eabc5b4c-6aff-42f3-b657-3e90cbd00b75",
   Thriller: "07251805-a27e-4d59-b488-f0bfbec15168",
   Historical: "33771934-028e-4cb3-8744-691e866a923e",
+  "School Life": "caaa4430-df38-44c2-8059-43c09101019d",
+  Gore: "b77146d9-f5c4-4615-872a-ae69fbcc81ce",
+  "Sexual Violence": "9789f22c-7033-4041-9d18-971ef2863864",
+  BDSM: "9466c479-8199-4795-870d-906cfedc900d",
+  Incest: "5bd3376c-3dc0-4966-9e9b-986c75f560e9",
+  Netorare: "2d1f5d5a-fa68-49d4-839c-76e93e231bc5",
 };
 
 export const LANGUAGES: Record<string, string> = {

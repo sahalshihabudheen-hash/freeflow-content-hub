@@ -3,6 +3,11 @@ import { useEffect, useState } from "react";
 import { getMatureContent, getAnimatedComics, searchManga, type Manga } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
 import { Loader2, Lock, Search, PlayCircle, Sparkles } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { getMatureContent, getAnimatedComics, searchManga, type Manga } from "@/lib/mangadex";
+import { MangaCard } from "@/components/MangaCard";
+import { Loader2, Lock, Search, PlayCircle, Sparkles } from "lucide-react";
 import { useAdultAccess } from "@/hooks/use-adult-access";
 
 export const Route = createFileRoute("/adult")({
@@ -18,9 +23,11 @@ function AdultHub() {
   const [error, setError] = useState<string | null>(null);
   const [offset, setOffset] = useState(0);
   const [query, setQuery] = useState("");
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   
   const LIMIT = 30;
+  const MATURE_GENRES = ["School Life", "Gore", "BDSM", "Incest", "Netorare", "Sexual Violence"];
 
   const fetchContent = async (newOffset = 0, isInitial = false) => {
     try {
@@ -36,7 +43,7 @@ function AdultHub() {
         results = await searchManga(query.trim(), LIMIT, newOffset, true);
       } else {
         const origLang = source === "manga" ? "ja" : "ko";
-        results = await getMatureContent(LIMIT, newOffset, undefined, undefined, origLang);
+        results = await getMatureContent(LIMIT, newOffset, selectedGenres, undefined, origLang);
       }
 
       setMangaList(prev => isInitial ? results : [...prev, ...results]);
@@ -53,11 +60,15 @@ function AdultHub() {
   useEffect(() => {
     fetchContent(0, true);
     setOffset(0);
-  }, [source]);
+  }, [source, selectedGenres]);
 
   useEffect(() => {
     getAnimatedComics(12, true).then(setAnimated).catch(() => {});
   }, []);
+
+  const toggleGenre = (g: string) => {
+    setSelectedGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,39 +136,66 @@ function AdultHub() {
       <hr className="border-border/40" />
 
       {/* Search & Filters */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex bg-secondary/50 p-1 rounded-xl w-full md:w-auto">
-          <button
-            onClick={() => setSource("manga")}
-            className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
-              source === "manga" ? "bg-background text-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Manga
-          </button>
-          <button
-            onClick={() => setSource("manhwa")}
-            className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
-              source === "manhwa" ? "bg-background text-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Manhwa
-          </button>
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-full mb-1">Filter by Taste</p>
+          {MATURE_GENRES.map(g => (
+            <button
+              key={g}
+              onClick={() => toggleGenre(g)}
+              className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
+                selectedGenres.includes(g) 
+                  ? "bg-destructive border-destructive text-white shadow-lg shadow-destructive/20" 
+                  : "border-border hover:border-destructive/40 text-muted-foreground"
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+          {selectedGenres.length > 0 && (
+            <button 
+              onClick={() => setSelectedGenres([])}
+              className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-destructive hover:underline"
+            >
+              Clear All
+            </button>
+          )}
         </div>
 
-        <form onSubmit={handleSearch} className="relative w-full md:max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search within Mature Hub..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 focus:border-destructive transition-all"
-          />
-          {isSearching && (
-            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-          )}
-        </form>
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex bg-secondary/50 p-1 rounded-xl w-full md:w-auto">
+            <button
+              onClick={() => setSource("manga")}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+                source === "manga" ? "bg-background text-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Manga
+            </button>
+            <button
+              onClick={() => setSource("manhwa")}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+                source === "manhwa" ? "bg-background text-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Manhwa
+            </button>
+          </div>
+
+          <form onSubmit={handleSearch} className="relative w-full md:max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search within Mature Hub..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 focus:border-destructive transition-all"
+            />
+            {isSearching && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+            )}
+          </form>
+        </div>
       </div>
 
       {error && (

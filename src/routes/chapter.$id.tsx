@@ -23,6 +23,24 @@ function ChapterReader() {
   const [siblings, setSiblings] = useState<Chapter[] | null>(null);
   const [manga, setManga] = useState<Manga | null>(null);
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `${manga?.title} - Chapter ${currentChapter?.chapter}`,
+      text: `Read ${manga?.title} - Chapter ${currentChapter?.chapter} on JARVIS COMICS!`,
+      url: window.location.href,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (e) {}
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   useEffect(() => {
     setPages(null);
@@ -78,6 +96,13 @@ function ChapterReader() {
           </div>
           
           <div className="flex items-center gap-1.5 shrink-0">
+            <button 
+              onClick={handleShare}
+              className="h-9 w-9 flex items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary transition-all"
+              title="Share"
+            >
+              {copied ? <Check className="h-4 w-4 text-primary" /> : <Share2 className="h-4 w-4 text-muted-foreground" />}
+            </button>
             <button 
               onClick={goPrev} 
               disabled={!prev} 
