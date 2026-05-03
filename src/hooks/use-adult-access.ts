@@ -7,28 +7,39 @@ export function useAdultAccess() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    return auth.onAuthStateChanged((user) => {
+    let unsubFirestore: (() => void) | null = null;
+
+    const unsubAuth = auth.onAuthStateChanged((user) => {
+      // Cancel any existing Firestore listener before setting up a new one
+      if (unsubFirestore) {
+        unsubFirestore();
+        unsubFirestore = null;
+      }
+
       if (!user) {
         setHasAdultAccess(false);
         setLoading(false);
         return;
       }
 
-      const unsub = onSnapshot(
+      setLoading(true);
+      unsubFirestore = onSnapshot(
         doc(db, "adult_access", user.uid),
         (snap) => {
           setHasAdultAccess(snap.exists());
           setLoading(false);
         },
-        (error) => {
-          console.error("Error fetching adult access:", error);
+        () => {
           setHasAdultAccess(false);
           setLoading(false);
         }
       );
-
-      return () => unsub();
     });
+
+    return () => {
+      unsubAuth();
+      if (unsubFirestore) unsubFirestore();
+    };
   }, []);
 
   return { hasAdultAccess, loading };
