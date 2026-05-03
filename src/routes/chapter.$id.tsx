@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useRouter, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getChapterPages, getChapters, getManga, type Chapter, type Manga } from "@/lib/mangadex";
-import { Loader2, ArrowLeft, ArrowRight, ChevronLeft, LayoutGrid } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight, ChevronLeft, LayoutGrid, Check, Share2 } from "lucide-react";
 import { z } from "zod";
 
 const chapterSearchSchema = z.object({

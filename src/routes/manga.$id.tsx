@@ -2,7 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { getManga, getChapters, getAvailableLanguages, LANGUAGES, type Manga, type Chapter } from "@/lib/mangadex";
 import { logViewManga } from "@/lib/search-analytics";
-import { Loader2, BookOpen, Calendar, Languages, Share2, Check } from "lucide-react";
+import { Loader2, BookOpen, Calendar, Languages, Share2, Check, Sparkles, Zap, ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/manga/$id")({
   component: MangaDetail,
