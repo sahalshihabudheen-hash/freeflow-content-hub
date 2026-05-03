@@ -1,12 +1,13 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Search, Menu, X, Home, Compass, BookOpen, Loader2, AlertCircle, SlidersHorizontal, SearchX, LogOut } from "lucide-react";
+import { Search, Menu, X, Home, Compass, BookOpen, Loader2, AlertCircle, SlidersHorizontal, SearchX, LogOut, ShieldCheck } from "lucide-react";
 import jarvisLogo from "@/assets/jarvis-comics-logo.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchManga, type Manga } from "@/lib/mangadex";
 import { logSearch, logClick } from "@/lib/search-analytics";
 import { useSearchDebounce, DEBOUNCE_MIN, DEBOUNCE_MAX, DEBOUNCE_DEFAULT } from "@/hooks/use-search-debounce";
 import { auth } from "@/lib/firebase";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 function useDebounced<T>(value: T, ms: number): T {
   const [d, setD] = useState(value);
@@ -429,6 +430,7 @@ export function Header() {
   const [q, setQ] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -465,6 +467,11 @@ export function Header() {
           <Link to="/adult" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }}>
             Mature
           </Link>
+          {isAdmin && (
+            <Link to="/admin" className="rounded-full px-3 py-2 text-primary transition hover:bg-primary/10 font-medium" activeProps={{ className: "bg-primary/15" }}>
+              Admin
+            </Link>
+          )}
           <button 
             onClick={() => auth.signOut()}
             className="ml-2 inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
@@ -502,6 +509,11 @@ export function Header() {
               <Link to="/adult" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
                 <BookOpen className="h-4 w-4 text-destructive" /> Mature Hub
               </Link>
+              {isAdmin && (
+                <Link to="/admin" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-primary/10 transition text-primary font-medium">
+                  <ShieldCheck className="h-4 w-4" /> Admin Dashboard
+                </Link>
+              )}
               <div className="flex items-center justify-between rounded-lg px-3 py-2 mt-2">
                 <span className="text-muted-foreground">Theme</span>
                 <ThemeToggle />

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { Loader2 } from "lucide-react";
+import { trackSession } from "@/lib/track-session";
 
 function NotFoundComponent() {
   return (
@@ -37,6 +38,9 @@ function RootComponent() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        trackSession(currentUser.uid).catch(() => {});
+      }
     });
     return () => unsubscribe();
   }, []);
