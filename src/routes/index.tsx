@@ -12,7 +12,7 @@ import {
 } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
 import { PreferencesModal, type Prefs } from "@/components/PreferencesModal";
-import { Loader2, SlidersHorizontal, BookOpen, X, Play } from "lucide-react";
+import { Loader2, SlidersHorizontal, BookOpen, X, Play, Compass, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -47,12 +47,30 @@ function Index() {
   const [topRated, setTopRated] = useState<Manga[] | null>(null);
   const [newReleases, setNewReleases] = useState<Manga[] | null>(null);
   const [animated, setAnimated] = useState<Manga[] | null>(null);
+  const [discovery, setDiscovery] = useState<Manga[]>([]);
+  const [offset, setOffset] = useState(24);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [genreSections, setGenreSections] = useState<Record<string, Manga[]>>({});
   const [error, setError] = useState<string | null>(null);
   
   const [lastRead, setLastRead] = useState<any>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Discovery logic
+  const loadMore = async () => {
+    if (!prefs || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const more = await getPopular(24, offset, prefs.genres, prefs.language);
+      setDiscovery((prev) => [...prev, ...more]);
+      setOffset((prev) => prev + 24);
+    } catch (e) {
+      console.error("Discovery error", e);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   // On mount: load saved prefs or open modal
   useEffect(() => {
@@ -98,6 +116,8 @@ function Index() {
     setNewReleases(null);
     setAnimated(null);
     setGenreSections({});
+    setDiscovery([]);
+    setOffset(24);
     setError(null);
 
     Promise.all([
@@ -113,6 +133,7 @@ function Index() {
         setTopRated(t);
         setNewReleases(n);
         setAnimated(a);
+        setDiscovery(p); // Initialize discovery with popular
       })
       .catch((e) => setError(e.message));
 
@@ -231,15 +252,43 @@ function Index() {
           <Section key={g} title={g} items={genreSections[g] ?? null} />
         ))}
 
-        <div className="pt-10 pb-20 text-center border-t border-border/50">
-          <h3 className="text-xl font-bold mb-4 text-muted-foreground">Hungry for more?</h3>
-          <Link 
-            to="/search" 
-            className="inline-flex items-center gap-2 h-14 px-8 rounded-full bg-primary text-primary-foreground font-bold hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20"
-          >
-            Browse All Series
-          </Link>
-        </div>
+        {/* Discovery Feed with Load More */}
+        <section className="pt-10 border-t border-border/50">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+              <Compass className="h-6 w-6" />
+            </div>
+            <h2 className="text-3xl font-black tracking-tighter uppercase italic">Discovery <span className="text-primary">Feed</span></h2>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+            {discovery.map((m) => (
+              <MangaCard key={m.id} manga={m} />
+            ))}
+          </div>
+
+          <div className="mt-12 pb-20 text-center">
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="group relative h-16 px-12 rounded-2xl bg-secondary text-foreground font-black uppercase tracking-widest text-xs hover:bg-primary hover:text-primary-foreground disabled:opacity-50 transition-all shadow-2xl shadow-black/20 flex items-center gap-4 mx-auto overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+              {loadingMore ? (
+                <>
+                  <Loader2 className="relative h-5 w-5 animate-spin" /> Fetching More
+                </>
+              ) : (
+                <>
+                  <Zap className="relative h-5 w-5" /> Load More Comics
+                </>
+              )}
+            </button>
+            <p className="mt-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-50">
+              Hungry for more? Browse the full library in search.
+            </p>
+          </div>
+        </section>
       </div>
     </div>
   );
