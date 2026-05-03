@@ -171,7 +171,7 @@ function AdminPage() {
     }
   };
 
-  if (!authChecked || roleLoading || checkingAdmins) {
+  if (!authChecked || roleLoading) {
     return <div className="container mx-auto py-20 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
 
@@ -186,6 +186,9 @@ function AdminPage() {
   }
 
   if (!isAdmin) {
+    if (checkingAdmins) {
+      return <div className="container mx-auto py-20 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    }
     if (noAdminsExist) {
       return (
         <div className="container mx-auto px-4 py-16 max-w-md text-center">
