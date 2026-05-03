@@ -304,7 +304,6 @@ function AdminPage() {
                 <th className="p-3 font-semibold">Device</th>
                 <th className="p-3 font-semibold">Joined</th>
                 <th className="p-3 font-semibold">Last seen</th>
-                <th className="p-3 font-semibold text-center">18+ Access</th>
                 <th className="p-3 font-semibold">Role</th>
                 <th className="p-3 font-semibold text-right">Action</th>
               </tr>
@@ -341,19 +340,6 @@ function AdminPage() {
                   <td className="p-3"><span className="inline-flex items-center gap-1.5"><DeviceIcon d={r.last_device} /> {r.last_device ?? "—"}</span></td>
                   <td className="p-3 text-muted-foreground">{r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}</td>
                   <td className="p-3 text-muted-foreground">{r.last_seen_at ? new Date(r.last_seen_at).toLocaleString() : "—"}</td>
-                  <td className="p-3 text-center">
-                    <button
-                      disabled={busyId === `adult_${r.id}`}
-                      onClick={() => toggleAdultAccess(r)}
-                      className={`h-6 px-2.5 rounded-full text-[10px] font-bold border transition disabled:opacity-50 ${
-                        r.has_adult_access
-                          ? "border-green-500/40 text-green-500 bg-green-500/10 hover:bg-green-500/20"
-                          : "border-muted-foreground/40 text-muted-foreground bg-muted hover:bg-secondary"
-                      }`}
-                    >
-                      {busyId === `adult_${r.id}` ? "…" : r.has_adult_access ? "GRANTED" : "DENIED"}
-                    </button>
-                  </td>
                   <td className="p-3">
                     {r.is_banned ? (
                       <span className="px-2 py-0.5 rounded-full bg-destructive/20 text-destructive text-xs font-bold">Banned</span>
@@ -376,6 +362,19 @@ function AdminPage() {
                       >
                         Activity
                       </Link>
+                      {!r.is_root_owner && (
+                        <button
+                          disabled={busyId === `adult_${r.id}`}
+                          onClick={() => toggleAdultAccess(r)}
+                          className={`h-8 px-3 rounded-md text-xs font-medium border transition disabled:opacity-50 ${
+                            r.has_adult_access
+                              ? "border-green-500/40 text-green-500 hover:bg-green-500/10"
+                              : "border-primary/40 text-primary hover:bg-primary/10"
+                          }`}
+                        >
+                          {busyId === `adult_${r.id}` ? "…" : r.has_adult_access ? "Revoke 18+" : "Grant 18+"}
+                        </button>
+                      )}
                       {!r.is_root_owner && r.email !== auth.currentUser?.email && (
                         <button
                           disabled={busyId === `ban_${r.id}`}
