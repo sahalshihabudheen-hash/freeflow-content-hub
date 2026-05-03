@@ -49,7 +49,17 @@ function ChapterReader() {
       .then((r) => setPages(r.urls))
       .catch((e) => setError(e.message));
     window.scrollTo({ top: 0 });
-  }, [id]);
+    
+    // Save as last read
+    if (mangaId && manga) {
+      localStorage.setItem("jarvis.lastRead", JSON.stringify({
+        mangaId,
+        chapterId: id,
+        mangaTitle: manga.title,
+        timestamp: Date.now()
+      }));
+    }
+  }, [id, mangaId, manga]);
 
   useEffect(() => {
     if (!mangaId) return;

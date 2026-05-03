@@ -12,7 +12,7 @@ import {
 } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
 import { PreferencesModal, type Prefs } from "@/components/PreferencesModal";
-import { Loader2, SlidersHorizontal } from "lucide-react";
+import { Loader2, SlidersHorizontal, BookOpen, X, Play } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,6 +49,10 @@ function Index() {
   const [animated, setAnimated] = useState<Manga[] | null>(null);
   const [genreSections, setGenreSections] = useState<Record<string, Manga[]>>({});
   const [error, setError] = useState<string | null>(null);
+  
+  const [lastRead, setLastRead] = useState<any>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // On mount: load saved prefs or open modal
   useEffect(() => {
@@ -57,6 +61,25 @@ function Index() {
       setPrefs(saved);
     } else {
       setShowModal(true);
+    }
+
+    // Check for last read
+    const last = localStorage.getItem("jarvis.lastRead");
+    if (last) {
+      const parsed = JSON.parse(last);
+      setLastRead(parsed);
+      
+      // Only show if it's been less than 24h but more than 5 minutes (to avoid annoying refreshes)
+      const now = Date.now();
+      const diff = now - parsed.timestamp;
+      if (diff > 5 * 60 * 1000) {
+        setTimeout(() => {
+          setShowWelcome(true);
+          const audio = new Audio("/notification.mp3");
+          audio.volume = 0.5;
+          audio.play().catch(() => {});
+        }, 1500);
+      }
     }
   }, []);
 
@@ -112,6 +135,45 @@ function Index() {
           onClose={prefs ? () => setShowModal(false) : undefined}
           canClose={!!prefs}
         />
+      )}
+
+      {/* Welcome Back Notification */}
+      {showWelcome && lastRead && (
+        <div className="fixed bottom-6 right-6 z-50 w-[calc(100%-3rem)] sm:w-96 animate-slide-in-right">
+          <div className="relative group bg-card/80 backdrop-blur-2xl border border-primary/20 rounded-2xl p-4 shadow-2xl shadow-primary/10 flex items-center gap-4 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
+            <div className="h-14 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <BookOpen className="h-6 w-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Welcome Back</p>
+              <h4 className="text-sm font-bold truncate mb-2">Continue reading {lastRead.mangaTitle}?</h4>
+              <div className="flex items-center gap-2">
+                <Link 
+                  to="/chapter/$id" 
+                  params={{ id: lastRead.chapterId }} 
+                  search={{ manga: lastRead.mangaId }}
+                  onClick={() => setShowWelcome(false)}
+                  className="inline-flex items-center gap-2 h-8 px-4 rounded-full bg-primary text-primary-foreground text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20"
+                >
+                  <Play className="h-3 w-3 fill-current" /> Resume
+                </Link>
+                <button 
+                  onClick={() => setShowWelcome(false)}
+                  className="h-8 px-3 rounded-full border border-border text-xs font-bold hover:bg-secondary transition-all"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowWelcome(false)}
+              className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Hero */}
