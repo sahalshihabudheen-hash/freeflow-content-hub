@@ -103,7 +103,10 @@ function AdminPage() {
     if (!isAdmin) return;
     const unsub = onSnapshot(doc(db, "app_settings", "maintenance"), (snap) => {
       setMaintenanceMode(snap.exists() ? !!snap.data()?.enabled : false);
-    }, () => {});
+    }, (e) => {
+      console.error("Maintenance listener error:", e);
+      setErr(`Maintenance settings access: ${e.message}`);
+    });
     return unsub;
   }, [isAdmin]);
 
@@ -137,7 +140,10 @@ function AdminPage() {
     const unsub = onSnapshot(q, (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setGlobalActivities(data);
-    }, (e) => setErr(e.message));
+    }, (e) => {
+      console.error("Activity listener error:", e);
+      setErr(`Global activity access: ${e.message}`);
+    });
 
     return unsub;
   }, [isAdmin, activeTab]);
@@ -199,22 +205,22 @@ function AdminPage() {
     const unsubSessions = onSnapshot(collection(db, "user_sessions"), (snap) => {
       sessionsDocs = snap.docs;
       updateRows();
-    }, (e) => setErr(e.message));
+    }, (e) => setErr(`Sessions access: ${e.message}`));
 
     const unsubAdmins = onSnapshot(collection(db, "admins"), (snap) => {
       adminsDocs = snap.docs;
       updateRows();
-    }, (e) => setErr(e.message));
+    }, (e) => setErr(`Admins access: ${e.message}`));
 
     const unsubAdultAccess = onSnapshot(collection(db, "adult_access"), (snap) => {
       adultAccessDocs = snap.docs;
       updateRows();
-    }, (e) => setErr(e.message));
+    }, (e) => setErr(`Adult access list: ${e.message}`));
 
     const unsubBanned = onSnapshot(collection(db, "banned_users"), (snap) => {
       bannedUsersDocs = snap.docs;
       updateRows();
-    }, (e) => setErr(e.message));
+    }, (e) => setErr(`Banned list access: ${e.message}`));
 
     return () => {
       unsubSessions();
