@@ -23,6 +23,18 @@ export function useIsAdmin() {
       if (user.email === "admin@gmail.com") {
         setIsAdmin(true);
         setLoading(false);
+        // Automatically inject root owner into admins collection so Firestore rules work seamlessly
+        try {
+          const docRef = doc(db, "admins", user.uid);
+          const docSnap = await withTimeout(getDoc(docRef), 5000);
+          if (!docSnap.exists()) {
+            import("firebase/firestore").then(({ setDoc }) => {
+              setDoc(docRef, { email: user.email, granted_at: new Date().toISOString() }).catch(() => {});
+            });
+          }
+        } catch (e) {
+          // ignore
+        }
         return;
       }
       try {
