@@ -10,8 +10,8 @@ const firebaseConfig = {
   projectId: "jarvis-comics",
   storageBucket: "jarvis-comics.firebasestorage.app",
   messagingSenderId: "499807777924",
-  appId: "1:499807777924:web:fe87739092a971f9f0bed1",
-  measurementId: "G-5YE38WGSMB"
+  appId: "1:499807777924:web:ef0623e35b53e594f0bed1",
+  measurementId: "G-SR48ZFSGD4"
 };
 
 // Initialize Firebase
