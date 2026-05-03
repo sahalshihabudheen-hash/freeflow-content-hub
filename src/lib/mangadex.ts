@@ -115,7 +115,9 @@ export const LANGUAGES: Record<string, string> = {
 function buildFilterParams(genres?: string[], language?: string): string {
   const parts: string[] = [];
   if (genres && genres.length) {
-    for (const g of genres) {
+    // MangaDex can fail with too many tags, limit to top 10
+    const limitedGenres = genres.slice(0, 10);
+    for (const g of limitedGenres) {
       const id = GENRE_TAGS[g];
       if (id) parts.push(`includedTags[]=${id}`);
     }

@@ -64,22 +64,28 @@ function Index() {
     }
 
     // Check for last read
-    const last = localStorage.getItem("jarvis.lastRead");
-    if (last) {
-      const parsed = JSON.parse(last);
-      setLastRead(parsed);
-      
-      // Only show if it's been less than 24h but more than 5 minutes (to avoid annoying refreshes)
-      const now = Date.now();
-      const diff = now - parsed.timestamp;
-      if (diff > 5 * 60 * 1000) {
-        setTimeout(() => {
-          setShowWelcome(true);
-          const audio = new Audio("/notification.mp3");
-          audio.volume = 0.5;
-          audio.play().catch(() => {});
-        }, 1500);
+    try {
+      const last = localStorage.getItem("jarvis.lastRead");
+      if (last) {
+        const parsed = JSON.parse(last);
+        if (parsed && parsed.chapterId && parsed.mangaId) {
+          setLastRead(parsed);
+          
+          // Only show if it's been less than 24h but more than 5 minutes
+          const now = Date.now();
+          const diff = now - (parsed.timestamp || 0);
+          if (diff > 5 * 60 * 1000 && diff < 24 * 60 * 60 * 1000) {
+            setTimeout(() => {
+              setShowWelcome(true);
+              const audio = new Audio("/notification.mp3");
+              audio.volume = 0.5;
+              audio.play().catch(() => {});
+            }, 1500);
+          }
+        }
       }
+    } catch (e) {
+      console.error("Failed to parse reading history", e);
     }
   }, []);
 
@@ -95,7 +101,7 @@ function Index() {
     setError(null);
 
     Promise.all([
-      getPopular(24, prefs.genres, prefs.language),
+      getPopular(24, 0, prefs.genres, prefs.language),
       getRecentlyUpdated(18, prefs.genres, prefs.language),
       getTopRated(18, prefs.genres, prefs.language),
       getNewReleases(18, prefs.genres, prefs.language),
@@ -138,40 +144,34 @@ function Index() {
       )}
 
       {/* Welcome Back Notification */}
-      {showWelcome && lastRead && (
-        <div className="fixed bottom-6 right-6 z-50 w-[calc(100%-3rem)] sm:w-96 animate-slide-in-right">
-          <div className="relative group bg-card/80 backdrop-blur-2xl border border-primary/20 rounded-2xl p-4 shadow-2xl shadow-primary/10 flex items-center gap-4 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
-            <div className="h-14 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Welcome Back</p>
-              <h4 className="text-sm font-bold truncate mb-2">Continue reading {lastRead.mangaTitle}?</h4>
-              <div className="flex items-center gap-2">
-                <Link 
-                  to="/chapter/$id" 
-                  params={{ id: lastRead.chapterId }} 
-                  search={{ manga: lastRead.mangaId }}
-                  onClick={() => setShowWelcome(false)}
-                  className="inline-flex items-center gap-2 h-8 px-4 rounded-full bg-primary text-primary-foreground text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20"
-                >
-                  <Play className="h-3 w-3 fill-current" /> Resume
-                </Link>
-                <button 
-                  onClick={() => setShowWelcome(false)}
-                  className="h-8 px-3 rounded-full border border-border text-xs font-bold hover:bg-secondary transition-all"
-                >
-                  Dismiss
-                </button>
+      {showWelcome && lastRead?.chapterId && lastRead?.mangaId && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000" />
+            <div className="relative flex items-center gap-4 bg-background/80 backdrop-blur-3xl border border-white/10 p-4 rounded-2xl shadow-2xl min-w-[300px]">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <Play className="h-6 w-6 fill-primary" />
               </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Welcome Back</p>
+                <p className="text-sm font-bold truncate pr-4">Continue {lastRead.mangaTitle}?</p>
+              </div>
+              <Link
+                to="/chapter/$id"
+                params={{ id: lastRead.chapterId }}
+                search={{ manga: lastRead.mangaId }}
+                onClick={() => setShowWelcome(false)}
+                className="h-10 px-6 rounded-xl bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center shadow-lg shadow-primary/20"
+              >
+                Read
+              </Link>
+              <button 
+                onClick={() => setShowWelcome(false)}
+                className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background border border-border flex items-center justify-center hover:bg-muted transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
             </div>
-            <button 
-              onClick={() => setShowWelcome(false)}
-              className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </div>
         </div>
       )}

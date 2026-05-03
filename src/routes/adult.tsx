@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getMatureContent, getAnimatedComics, searchManga, type Manga } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
-import { Loader2, Lock, Search, PlayCircle, Sparkles } from "lucide-react";
+import { Loader2, Lock, Search, PlayCircle, Sparkles, Zap } from "lucide-react";
 import { useAdultAccess } from "@/hooks/use-adult-access";
 
 export const Route = createFileRoute("/adult")({
