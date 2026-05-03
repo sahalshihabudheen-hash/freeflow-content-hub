@@ -25,6 +25,7 @@ type Row = {
   is_admin: boolean;
   is_root_owner: boolean;
   is_online: boolean;
+  has_adult_access: boolean;
 };
 
 function getFlagEmoji(countryCode: string | null) {
@@ -98,10 +99,12 @@ function AdminPage() {
     setErr(null);
     let sessionsDocs: any[] = [];
     let adminsDocs: any[] = [];
+    let adultAccessDocs: any[] = [];
     let initialized = 0;
 
     const updateRows = () => {
       const adminSet = new Set(adminsDocs.map(d => d.id));
+      const adultAccessSet = new Set(adultAccessDocs.map(d => d.id));
       const data: Row[] = sessionsDocs.map(d => {
         const val = d.data();
         let lastSeen = null;
@@ -128,7 +131,8 @@ function AdminPage() {
           created_at: val.created_at || null,
           is_admin: adminSet.has(d.id) || is_root_owner,
           is_root_owner,
-          is_online
+          is_online,
+          has_adult_access: adultAccessSet.has(d.id)
         };
       });
       
@@ -151,11 +155,35 @@ function AdminPage() {
       updateRows();
     }, (e) => setErr(e.message));
 
+    const unsubAdultAccess = onSnapshot(collection(db, "adult_access"), (snap) => {
+      adultAccessDocs = snap.docs;
+      updateRows();
+    }, (e) => setErr(e.message));
+
     return () => {
       unsubSessions();
       unsubAdmins();
+      unsubAdultAccess();
     };
   }, [isAdmin]);
+
+  const toggleAdultAccess = async (row: Row) => {
+    setBusyId(`adult_${row.id}`);
+    try {
+      if (row.has_adult_access) {
+        await deleteDoc(doc(db, "adult_access", row.id));
+      } else {
+        await setDoc(doc(db, "adult_access", row.id), {
+          email: row.email,
+          granted_at: new Date().toISOString()
+        });
+      }
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const toggleAdmin = async (row: Row) => {
     setBusyId(row.id);
@@ -247,6 +275,7 @@ function AdminPage() {
                 <th className="p-3 font-semibold">Device</th>
                 <th className="p-3 font-semibold">Joined</th>
                 <th className="p-3 font-semibold">Last seen</th>
+                <th className="p-3 font-semibold text-center">18+ Access</th>
                 <th className="p-3 font-semibold">Role</th>
                 <th className="p-3 font-semibold text-right">Action</th>
               </tr>
@@ -283,6 +312,19 @@ function AdminPage() {
                   <td className="p-3"><span className="inline-flex items-center gap-1.5"><DeviceIcon d={r.last_device} /> {r.last_device ?? "—"}</span></td>
                   <td className="p-3 text-muted-foreground">{r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}</td>
                   <td className="p-3 text-muted-foreground">{r.last_seen_at ? new Date(r.last_seen_at).toLocaleString() : "—"}</td>
+                  <td className="p-3 text-center">
+                    <button
+                      disabled={busyId === `adult_${r.id}`}
+                      onClick={() => toggleAdultAccess(r)}
+                      className={`h-6 px-2.5 rounded-full text-[10px] font-bold border transition disabled:opacity-50 ${
+                        r.has_adult_access
+                          ? "border-green-500/40 text-green-500 bg-green-500/10 hover:bg-green-500/20"
+                          : "border-muted-foreground/40 text-muted-foreground bg-muted hover:bg-secondary"
+                      }`}
+                    >
+                      {busyId === `adult_${r.id}` ? "…" : r.has_adult_access ? "GRANTED" : "DENIED"}
+                    </button>
+                  </td>
                   <td className="p-3">
                     {r.is_root_owner ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-500 text-xs font-bold shadow-[0_0_10px_rgba(59,130,246,0.2)]">

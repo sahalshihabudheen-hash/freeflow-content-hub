@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getMatureContent, type Manga } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
+import { useAdultAccess } from "@/hooks/use-adult-access";
 
 export const Route = createFileRoute("/adult")({
   component: AdultHub,
@@ -24,6 +25,31 @@ function AdultHub() {
       .then(setMangaList)
       .catch((e) => setError("Failed to fetch content. " + e.message));
   }, [source]);
+
+  const { hasAdultAccess, loading: accessLoading } = useAdultAccess();
+
+  if (accessLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!hasAdultAccess) {
+    return (
+      <div className="container mx-auto px-4 py-24 text-center max-w-md">
+        <div className="mx-auto w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mb-6">
+          <Lock className="h-8 w-8" />
+        </div>
+        <h1 className="text-3xl font-bold mb-4">Access Restricted</h1>
+        <p className="text-muted-foreground mb-8">
+          This section contains adult content and requires explicit permission to view. 
+          Please contact an administrator to verify your age and grant you access.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-12 space-y-8">
