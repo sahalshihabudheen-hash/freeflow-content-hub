@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchManga, type Manga } from "@/lib/mangadex";
 import { logSearch, logClick } from "@/lib/search-analytics";
 import { useSearchDebounce, DEBOUNCE_MIN, DEBOUNCE_MAX, DEBOUNCE_DEFAULT } from "@/hooks/use-search-debounce";
+import { auth } from "@/lib/firebase";
 
 function useDebounced<T>(value: T, ms: number): T {
   const [d, setD] = useState(value);
@@ -464,6 +465,12 @@ export function Header() {
           <Link to="/adult" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }}>
             Mature
           </Link>
+          <button 
+            onClick={() => auth.signOut()}
+            className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground ml-2"
+          >
+            Sign out
+          </button>
         </nav>
 
         <ThemeToggle className="hidden sm:inline-flex" />
@@ -498,6 +505,12 @@ export function Header() {
                 <span className="text-muted-foreground">Theme</span>
                 <ThemeToggle />
               </div>
+              <button 
+                onClick={() => { auth.signOut(); closeMenu(); }}
+                className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition text-left text-muted-foreground"
+              >
+                Sign out
+              </button>
             </nav>
           </div>
         </div>

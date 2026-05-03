@@ -1,5 +1,9 @@
-import { Outlet, Link, createRootRoute } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, useNavigate, useLocation } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
+import { useEffect, useState } from "react";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { Loader2 } from "lucide-react";
 
 function NotFoundComponent() {
   return (
@@ -26,15 +30,47 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  const [user, setUser] = useState<User | null | undefined>(undefined);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (user === null && location.pathname !== "/auth") {
+      navigate({ to: "/auth", replace: true });
+    }
+  }, [user, location.pathname, navigate]);
+
+  if (user === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If user is null and not on /auth, we are redirecting, render nothing to avoid flicker
+  if (user === null && location.pathname !== "/auth") {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      {location.pathname !== "/auth" && <Header />}
       <main className="flex-1">
         <Outlet />
       </main>
-      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-        POWERED BY JARVIS
-      </footer>
+      {location.pathname !== "/auth" && (
+        <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
+          POWERED BY JARVIS
+        </footer>
+      )}
     </div>
   );
 }
