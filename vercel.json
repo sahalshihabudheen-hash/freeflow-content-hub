@@ -2,10 +2,11 @@
   "rewrites": [
     { "source": "/api/mangadex/(.*)", "destination": "/api/mangadex.js" },
     { "source": "/api/covers/(.*)", "destination": "/api/covers.js" },
-    { "source": "/manga/:id", "destination": "/api/meta.js", "missing": [{ "type": "query", "key": "redirected" }] },
-    { "source": "/my-comic/:id", "destination": "/api/meta.js", "missing": [{ "type": "query", "key": "redirected" }] },
-    { "source": "/chapter/:id", "destination": "/api/meta.js", "missing": [{ "type": "query", "key": "redirected" }] },
+    { "source": "/manga/:id", "destination": "/api/meta.js?type=manga&id=:id", "missing": [{ "type": "query", "key": "redirected" }] },
+    { "source": "/my-comic/:id", "destination": "/api/meta.js?type=my-comic&id=:id", "missing": [{ "type": "query", "key": "redirected" }] },
+    { "source": "/chapter/:id", "destination": "/api/meta.js?type=chapter&id=:id", "missing": [{ "type": "query", "key": "redirected" }] },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
+
 
