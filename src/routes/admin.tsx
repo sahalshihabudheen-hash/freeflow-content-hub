@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { collection, getDocs, doc, setDoc, deleteDoc, onSnapshot } from "firebase/firestore";
-import { Loader2, Shield, ShieldCheck, Smartphone, Tablet, Monitor, ArrowLeft } from "lucide-react";
+import { Loader2, Shield, ShieldCheck, Smartphone, Tablet, Monitor, ArrowLeft, Wrench, Power } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — JARVIS COMICS" }] }),
@@ -54,6 +54,8 @@ function AdminPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [noAdminsExist, setNoAdminsExist] = useState(false);
   const [checkingAdmins, setCheckingAdmins] = useState(true);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceBusy, setMaintenanceBusy] = useState(false);
 
   useEffect(() => {
     return auth.onAuthStateChanged((user) => {
@@ -91,6 +93,39 @@ function AdminPage() {
       setErr(e.message);
     } finally {
       setBusyId(null);
+    }
+  };
+
+  // Listen to maintenance mode
+  useEffect(() => {
+    if (!isAdmin) return;
+    const unsub = onSnapshot(doc(db, "app_settings", "maintenance"), (snap) => {
+      setMaintenanceMode(snap.exists() ? !!snap.data()?.enabled : false);
+    }, () => {});
+    return unsub;
+  }, [isAdmin]);
+
+  const toggleMaintenance = async () => {
+    setMaintenanceBusy(true);
+    try {
+      const next = !maintenanceMode;
+      if (next) {
+        await setDoc(doc(db, "app_settings", "maintenance"), {
+          enabled: true,
+          enabled_at: new Date().toISOString(),
+          enabled_by: auth.currentUser?.email || "unknown",
+        });
+      } else {
+        await setDoc(doc(db, "app_settings", "maintenance"), {
+          enabled: false,
+          disabled_at: new Date().toISOString(),
+          disabled_by: auth.currentUser?.email || "unknown",
+        });
+      }
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setMaintenanceBusy(false);
     }
   };
 
@@ -287,9 +322,95 @@ function AdminPage() {
         <ShieldCheck className="h-7 w-7 text-primary" />
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
       </div>
-      <p className="text-muted-foreground mb-6">{rows?.length ?? 0} total users</p>
 
       {err && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{err}</div>}
+
+      {/* ─── Site Settings Card ─── */}
+      <div style={{
+        marginBottom: 28,
+        borderRadius: 16,
+        border: maintenanceMode ? "1px solid rgba(239,68,68,0.35)" : "1px solid rgba(255,255,255,0.08)",
+        background: maintenanceMode
+          ? "linear-gradient(135deg, rgba(239,68,68,0.07) 0%, rgba(15,23,42,0.8) 100%)"
+          : "linear-gradient(135deg, rgba(59,130,246,0.05) 0%, rgba(15,23,42,0.8) 100%)",
+        padding: "20px 24px",
+        display: "flex",
+        alignItems: "center",
+        gap: 20,
+        backdropFilter: "blur(8px)",
+        transition: "all 0.4s ease",
+        boxShadow: maintenanceMode ? "0 0 30px rgba(239,68,68,0.1)" : "0 0 30px rgba(59,130,246,0.05)",
+      }}>
+        {/* Icon */}
+        <div style={{
+          width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+          background: maintenanceMode ? "rgba(239,68,68,0.15)" : "rgba(59,130,246,0.12)",
+          border: maintenanceMode ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(59,130,246,0.2)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          transition: "all 0.4s ease",
+        }}>
+          <Wrench className="h-5 w-5" style={{ color: maintenanceMode ? "#ef4444" : "#3b82f6" }} />
+        </div>
+
+        {/* Text */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "0.01em" }}>Maintenance Mode</span>
+            {maintenanceMode && (
+              <span style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+                textTransform: "uppercase", color: "#ef4444",
+                background: "rgba(239,68,68,0.12)",
+                padding: "2px 8px", borderRadius: 999,
+                border: "1px solid rgba(239,68,68,0.25)",
+                animation: "pulse 2s infinite",
+              }}>● Live</span>
+            )}
+          </div>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0 }}>
+            {maintenanceMode
+              ? "Site is LOCKED — only admins can access. All other users see the maintenance screen."
+              : "Toggle to lock the site for all non-admin users and play the maintenance audio."}
+          </p>
+        </div>
+
+        {/* Toggle switch */}
+        <button
+          id="maintenance-toggle"
+          disabled={maintenanceBusy}
+          onClick={toggleMaintenance}
+          style={{
+            position: "relative",
+            width: 56, height: 30, borderRadius: 999,
+            border: "none", cursor: maintenanceBusy ? "wait" : "pointer",
+            background: maintenanceMode
+              ? "linear-gradient(90deg, #dc2626, #ef4444)"
+              : "rgba(255,255,255,0.12)",
+            transition: "background 0.35s ease",
+            flexShrink: 0,
+            boxShadow: maintenanceMode ? "0 0 16px rgba(239,68,68,0.5)" : "none",
+            opacity: maintenanceBusy ? 0.6 : 1,
+          }}
+          title={maintenanceMode ? "Disable maintenance mode" : "Enable maintenance mode"}
+        >
+          <span style={{
+            position: "absolute",
+            top: 3, left: maintenanceMode ? "calc(100% - 27px)" : 3,
+            width: 24, height: 24, borderRadius: "50%",
+            background: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "left 0.3s cubic-bezier(0.4,0,0.2,1)",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+          }}>
+            {maintenanceBusy
+              ? <Loader2 className="h-3 w-3 animate-spin" style={{ color: maintenanceMode ? "#ef4444" : "#666" }} />
+              : <Power className="h-3 w-3" style={{ color: maintenanceMode ? "#ef4444" : "#aaa" }} />
+            }
+          </span>
+        </button>
+      </div>
+
+      <p className="text-muted-foreground mb-6">{rows?.length ?? 0} total users</p>
 
       {rows === null ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>

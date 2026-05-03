@@ -14,13 +14,13 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdultRouteImport } from './routes/adult'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AdminActivityIdRouteImport } from './routes/admin-activity.$id'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyComicIdRouteImport } from './routes/my-comic.$id'
 import { Route as MyChapterIdRouteImport } from './routes/my-chapter.$id'
 import { Route as MangaIdRouteImport } from './routes/manga.$id'
 import { Route as ChapterIdRouteImport } from './routes/chapter.$id'
 import { Route as ApiImageRouteImport } from './routes/api.image'
+import { Route as AdminActivityIdRouteImport } from './routes/admin-activity.$id'
 import { Route as ApiMangadexSplatRouteImport } from './routes/api.mangadex.$'
 import { Route as ApiCoversSplatRouteImport } from './routes/api.covers.$'
 
@@ -47,11 +47,6 @@ const AdultRoute = AdultRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminActivityIdRoute = AdminActivityIdRouteImport.update({
-  id: '/admin-activity/$id',
-  path: '/admin-activity/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -84,6 +79,11 @@ const ApiImageRoute = ApiImageRouteImport.update({
   path: '/api/image',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminActivityIdRoute = AdminActivityIdRouteImport.update({
+  id: '/admin-activity/$id',
+  path: '/admin-activity/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMangadexSplatRoute = ApiMangadexSplatRouteImport.update({
   id: '/api/mangadex/$',
   path: '/api/mangadex/$',
@@ -98,11 +98,11 @@ const ApiCoversSplatRoute = ApiCoversSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/admin-activity/$id': typeof AdminActivityIdRoute
   '/adult': typeof AdultRoute
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
+  '/admin-activity/$id': typeof AdminActivityIdRoute
   '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
@@ -114,11 +114,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/admin-activity/$id': typeof AdminActivityIdRoute
   '/adult': typeof AdultRoute
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
+  '/admin-activity/$id': typeof AdminActivityIdRoute
   '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
@@ -131,11 +131,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/admin-activity/$id': typeof AdminActivityIdRoute
   '/adult': typeof AdultRoute
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
+  '/admin-activity/$id': typeof AdminActivityIdRoute
   '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
@@ -149,11 +149,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
-    | '/admin-activity/$id'
     | '/adult'
     | '/auth'
     | '/search'
     | '/upload'
+    | '/admin-activity/$id'
     | '/api/image'
     | '/chapter/$id'
     | '/manga/$id'
@@ -165,11 +165,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
-    | '/admin-activity/$id'
     | '/adult'
     | '/auth'
     | '/search'
     | '/upload'
+    | '/admin-activity/$id'
     | '/api/image'
     | '/chapter/$id'
     | '/manga/$id'
@@ -181,11 +181,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
-    | '/admin-activity/$id'
     | '/adult'
     | '/auth'
     | '/search'
     | '/upload'
+    | '/admin-activity/$id'
     | '/api/image'
     | '/chapter/$id'
     | '/manga/$id'
@@ -198,11 +198,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
-  AdminActivityIdRoute: typeof AdminActivityIdRoute
   AdultRoute: typeof AdultRoute
   AuthRoute: typeof AuthRoute
   SearchRoute: typeof SearchRoute
   UploadRoute: typeof UploadRoute
+  AdminActivityIdRoute: typeof AdminActivityIdRoute
   ApiImageRoute: typeof ApiImageRoute
   ChapterIdRoute: typeof ChapterIdRoute
   MangaIdRoute: typeof MangaIdRoute
@@ -249,13 +249,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin-activity/$id': {
-      id: '/admin-activity/$id'
-      path: '/admin-activity/$id'
-      fullPath: '/admin-activity/$id'
-      preLoaderRoute: typeof AdminActivityIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -298,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiImageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-activity/$id': {
+      id: '/admin-activity/$id'
+      path: '/admin-activity/$id'
+      fullPath: '/admin-activity/$id'
+      preLoaderRoute: typeof AdminActivityIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/mangadex/$': {
       id: '/api/mangadex/$'
       path: '/api/mangadex/$'
@@ -318,11 +318,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
-  AdminActivityIdRoute: AdminActivityIdRoute,
   AdultRoute: AdultRoute,
   AuthRoute: AuthRoute,
   SearchRoute: SearchRoute,
   UploadRoute: UploadRoute,
+  AdminActivityIdRoute: AdminActivityIdRoute,
   ApiImageRoute: ApiImageRoute,
   ChapterIdRoute: ChapterIdRoute,
   MangaIdRoute: MangaIdRoute,
