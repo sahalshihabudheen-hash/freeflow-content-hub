@@ -472,7 +472,7 @@ function AdminPage() {
                             </div>
                           </td>
                           <td className="p-4 text-right">
-                            <div className="flex justify-end items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex justify-end items-center gap-2 transition-opacity">
                               <Link
                                 to="/admin-activity/$id"
                                 params={{ id: r.id }}
