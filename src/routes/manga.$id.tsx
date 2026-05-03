@@ -109,6 +109,20 @@ function MangaDetail() {
                 {manga.coverUrl && (
                   <img src={manga.coverUrl} alt={manga.title} className="h-full w-full object-cover" />
                 )}
+                
+                {/* Floating Share Button on Cover */}
+                <button
+                  onClick={handleShare}
+                  className={`absolute top-4 left-4 z-10 h-10 w-10 rounded-xl flex items-center justify-center backdrop-blur-md border transition-all duration-300 ${
+                    copied 
+                      ? "bg-green-500 border-green-400 text-white" 
+                      : "bg-black/40 border-white/10 text-white hover:bg-primary hover:border-primary"
+                  }`}
+                  title="Share Series"
+                >
+                  {copied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
+                </button>
+
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             </div>
