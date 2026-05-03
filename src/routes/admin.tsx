@@ -226,7 +226,7 @@ function AdminPage() {
         <ShieldCheck className="h-7 w-7 text-primary" />
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
       </div>
-      <p className="text-muted-foreground mb-6">{rows?.length ?? 0} active sessions</p>
+      <p className="text-muted-foreground mb-6">{rows?.length ?? 0} total users</p>
 
       {err && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{err}</div>}
 
