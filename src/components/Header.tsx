@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Search, Menu, X, Home, Compass, BookOpen, Loader2, AlertCircle, SlidersHorizontal, SearchX } from "lucide-react";
+import { Search, Menu, X, Home, Compass, BookOpen, Loader2, AlertCircle, SlidersHorizontal, SearchX, LogOut } from "lucide-react";
 import jarvisLogo from "@/assets/jarvis-comics-logo.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchManga, type Manga } from "@/lib/mangadex";
@@ -467,9 +467,10 @@ export function Header() {
           </Link>
           <button 
             onClick={() => auth.signOut()}
-            className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground ml-2"
+            className="ml-2 inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
           >
-            Sign out
+            <LogOut className="h-3.5 w-3.5" />
+            Log out
           </button>
         </nav>
 
@@ -507,9 +508,9 @@ export function Header() {
               </div>
               <button 
                 onClick={() => { auth.signOut(); closeMenu(); }}
-                className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition text-left text-muted-foreground"
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-3 mt-2 text-destructive hover:bg-destructive/10 transition text-left font-medium"
               >
-                Sign out
+                <LogOut className="h-4 w-4" /> Log out
               </button>
             </nav>
           </div>
