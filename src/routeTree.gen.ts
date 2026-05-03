@@ -14,6 +14,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdultRouteImport } from './routes/adult'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AdminActivityIdRouteImport } from './routes/admin-activity.$id'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyComicIdRouteImport } from './routes/my-comic.$id'
 import { Route as MyChapterIdRouteImport } from './routes/my-chapter.$id'
@@ -46,6 +47,11 @@ const AdultRoute = AdultRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminActivityIdRoute = AdminActivityIdRouteImport.update({
+  id: '/admin-activity/$id',
+  path: '/admin-activity/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -92,6 +98,7 @@ const ApiCoversSplatRoute = ApiCoversSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin-activity/$id': typeof AdminActivityIdRoute
   '/adult': typeof AdultRoute
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin-activity/$id': typeof AdminActivityIdRoute
   '/adult': typeof AdultRoute
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin-activity/$id': typeof AdminActivityIdRoute
   '/adult': typeof AdultRoute
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/admin-activity/$id'
     | '/adult'
     | '/auth'
     | '/search'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/admin-activity/$id'
     | '/adult'
     | '/auth'
     | '/search'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/admin-activity/$id'
     | '/adult'
     | '/auth'
     | '/search'
@@ -186,6 +198,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  AdminActivityIdRoute: typeof AdminActivityIdRoute
   AdultRoute: typeof AdultRoute
   AuthRoute: typeof AuthRoute
   SearchRoute: typeof SearchRoute
@@ -234,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-activity/$id': {
+      id: '/admin-activity/$id'
+      path: '/admin-activity/$id'
+      fullPath: '/admin-activity/$id'
+      preLoaderRoute: typeof AdminActivityIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -298,6 +318,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  AdminActivityIdRoute: AdminActivityIdRoute,
   AdultRoute: AdultRoute,
   AuthRoute: AuthRoute,
   SearchRoute: SearchRoute,

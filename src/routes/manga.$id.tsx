@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { getManga, getChapters, getAvailableLanguages, LANGUAGES, type Manga, type Chapter } from "@/lib/mangadex";
+import { logViewManga } from "@/lib/search-analytics";
 import { Loader2, BookOpen, Calendar, Languages } from "lucide-react";
 
 export const Route = createFileRoute("/manga/$id")({
@@ -30,7 +31,12 @@ function MangaDetail() {
   const [langInitialized, setLangInitialized] = useState(false);
 
   useEffect(() => {
-    getManga(id).then(setManga).catch(() => {});
+    getManga(id).then((m) => {
+      setManga(m);
+      const isAdult = m.contentRating === "pornographic" || m.contentRating === "erotica";
+      logViewManga(id, m.title, isAdult).catch(() => {});
+    }).catch(() => {});
+    
     getAvailableLanguages(id).then((langs) => {
       setAvailableLangs(langs);
       // Pick English if available, otherwise first available language

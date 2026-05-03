@@ -26,6 +26,7 @@ type Row = {
   is_root_owner: boolean;
   is_online: boolean;
   has_adult_access: boolean;
+  is_banned: boolean;
 };
 
 function getFlagEmoji(countryCode: string | null) {
@@ -100,11 +101,13 @@ function AdminPage() {
     let sessionsDocs: any[] = [];
     let adminsDocs: any[] = [];
     let adultAccessDocs: any[] = [];
+    let bannedUsersDocs: any[] = [];
     let initialized = 0;
 
     const updateRows = () => {
       const adminSet = new Set(adminsDocs.map(d => d.id));
       const adultAccessSet = new Set(adultAccessDocs.map(d => d.id));
+      const bannedSet = new Set(bannedUsersDocs.map(d => d.id));
       const data: Row[] = sessionsDocs.map(d => {
         const val = d.data();
         let lastSeen = null;
@@ -132,7 +135,8 @@ function AdminPage() {
           is_admin: adminSet.has(d.id) || is_root_owner,
           is_root_owner,
           is_online,
-          has_adult_access: adultAccessSet.has(d.id)
+          has_adult_access: adultAccessSet.has(d.id),
+          is_banned: bannedSet.has(d.id)
         };
       });
       
@@ -160,12 +164,37 @@ function AdminPage() {
       updateRows();
     }, (e) => setErr(e.message));
 
+    const unsubBanned = onSnapshot(collection(db, "banned_users"), (snap) => {
+      bannedUsersDocs = snap.docs;
+      updateRows();
+    }, (e) => setErr(e.message));
+
     return () => {
       unsubSessions();
       unsubAdmins();
       unsubAdultAccess();
+      unsubBanned();
     };
   }, [isAdmin]);
+
+  const toggleBan = async (row: Row) => {
+    if (row.is_root_owner || row.email === auth.currentUser?.email) return;
+    setBusyId(`ban_${row.id}`);
+    try {
+      if (row.is_banned) {
+        await deleteDoc(doc(db, "banned_users", row.id));
+      } else {
+        await setDoc(doc(db, "banned_users", row.id), {
+          email: row.email,
+          banned_at: new Date().toISOString()
+        });
+      }
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const toggleAdultAccess = async (row: Row) => {
     setBusyId(`adult_${row.id}`);
@@ -282,7 +311,7 @@ function AdminPage() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-t border-border hover:bg-muted/20">
+                <tr key={r.id} className={`border-t border-border hover:bg-muted/20 ${r.is_banned ? "opacity-50 grayscale" : ""}`}>
                   <td className="p-3 font-medium">
                     <div className="flex items-center gap-3">
                       <div className="relative">
@@ -326,7 +355,9 @@ function AdminPage() {
                     </button>
                   </td>
                   <td className="p-3">
-                    {r.is_root_owner ? (
+                    {r.is_banned ? (
+                      <span className="px-2 py-0.5 rounded-full bg-destructive/20 text-destructive text-xs font-bold">Banned</span>
+                    ) : r.is_root_owner ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-500 text-xs font-bold shadow-[0_0_10px_rgba(59,130,246,0.2)]">
                         <ShieldCheck className="h-3 w-3" /> Root Owner
                       </span>
@@ -337,19 +368,41 @@ function AdminPage() {
                     )}
                   </td>
                   <td className="p-3 text-right">
-                    {!r.is_root_owner && (
-                      <button
-                        disabled={busyId === r.id}
-                        onClick={() => toggleAdmin(r)}
-                        className={`h-8 px-3 rounded-md text-xs font-medium border transition disabled:opacity-50 ${
-                          r.is_admin
-                            ? "border-destructive/40 text-destructive hover:bg-destructive/10"
-                            : "border-primary/40 text-primary hover:bg-primary/10"
-                        }`}
+                    <div className="flex justify-end items-center gap-2">
+                      <Link
+                        to="/admin-activity/$id"
+                        params={{ id: r.id }}
+                        className="h-8 px-3 rounded-md text-xs font-medium border border-border text-foreground hover:bg-secondary flex items-center transition"
                       >
-                        {busyId === r.id ? "…" : r.is_admin ? "Revoke admin" : "Grant admin"}
-                      </button>
-                    )}
+                        Activity
+                      </Link>
+                      {!r.is_root_owner && r.email !== auth.currentUser?.email && (
+                        <button
+                          disabled={busyId === `ban_${r.id}`}
+                          onClick={() => toggleBan(r)}
+                          className={`h-8 px-3 rounded-md text-xs font-medium border transition disabled:opacity-50 ${
+                            r.is_banned
+                              ? "border-muted-foreground/40 text-muted-foreground hover:bg-secondary"
+                              : "border-destructive/40 text-destructive hover:bg-destructive/10"
+                          }`}
+                        >
+                          {busyId === `ban_${r.id}` ? "…" : r.is_banned ? "Unban" : "Ban"}
+                        </button>
+                      )}
+                      {!r.is_root_owner && (
+                        <button
+                          disabled={busyId === r.id || r.is_banned}
+                          onClick={() => toggleAdmin(r)}
+                          className={`h-8 px-3 rounded-md text-xs font-medium border transition disabled:opacity-50 ${
+                            r.is_admin
+                              ? "border-orange-500/40 text-orange-500 hover:bg-orange-500/10"
+                              : "border-primary/40 text-primary hover:bg-primary/10"
+                          }`}
+                        >
+                          {busyId === r.id ? "…" : r.is_admin ? "Revoke admin" : "Grant admin"}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
