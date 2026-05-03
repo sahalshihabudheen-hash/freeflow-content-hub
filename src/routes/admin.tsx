@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 import { Loader2, Shield, ShieldCheck, Smartphone, Tablet, Monitor, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
@@ -90,17 +90,17 @@ function AdminPage() {
     }
   };
 
-  const load = async () => {
+  useEffect(() => {
+    if (!isAdmin) return;
+    
     setErr(null);
-    try {
-      const [sessionsSnap, adminsSnap] = await Promise.all([
-        getDocs(collection(db, "user_sessions")),
-        getDocs(collection(db, "admins"))
-      ]);
-      
-      const adminSet = new Set(adminsSnap.docs.map(d => d.id));
-      
-      const data: Row[] = sessionsSnap.docs.map(d => {
+    let sessionsDocs: any[] = [];
+    let adminsDocs: any[] = [];
+    let initialized = 0;
+
+    const updateRows = () => {
+      const adminSet = new Set(adminsDocs.map(d => d.id));
+      const data: Row[] = sessionsDocs.map(d => {
         const val = d.data();
         let lastSeen = null;
         if (val.last_seen_at?.toDate) {
@@ -133,13 +133,24 @@ function AdminPage() {
       });
 
       setRows(data);
-    } catch (e: any) {
-      setErr(e.message ?? "Failed to load");
-    }
-  };
+    };
 
-  useEffect(() => {
-    if (isAdmin) load();
+    const unsubSessions = onSnapshot(collection(db, "user_sessions"), (snap) => {
+      sessionsDocs = snap.docs;
+      initialized |= 1;
+      if (initialized === 3) updateRows();
+    }, (e) => setErr(e.message));
+
+    const unsubAdmins = onSnapshot(collection(db, "admins"), (snap) => {
+      adminsDocs = snap.docs;
+      initialized |= 2;
+      if (initialized === 3) updateRows();
+    }, (e) => setErr(e.message));
+
+    return () => {
+      unsubSessions();
+      unsubAdmins();
+    };
   }, [isAdmin]);
 
   const toggleAdmin = async (row: Row) => {
@@ -153,7 +164,6 @@ function AdminPage() {
           created_at: new Date().toISOString()
         });
       }
-      await load();
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -228,6 +238,7 @@ function AdminPage() {
                 <th className="p-3 font-semibold">IP Address</th>
                 <th className="p-3 font-semibold">Country</th>
                 <th className="p-3 font-semibold">Device</th>
+                <th className="p-3 font-semibold">Joined</th>
                 <th className="p-3 font-semibold">Last seen</th>
                 <th className="p-3 font-semibold">Role</th>
                 <th className="p-3 font-semibold text-right">Action</th>
@@ -256,6 +267,7 @@ function AdminPage() {
                     )}
                   </td>
                   <td className="p-3"><span className="inline-flex items-center gap-1.5"><DeviceIcon d={r.last_device} /> {r.last_device ?? "—"}</span></td>
+                  <td className="p-3 text-muted-foreground">{r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}</td>
                   <td className="p-3 text-muted-foreground">{r.last_seen_at ? new Date(r.last_seen_at).toLocaleString() : "—"}</td>
                   <td className="p-3">
                     {r.is_root_owner ? (
