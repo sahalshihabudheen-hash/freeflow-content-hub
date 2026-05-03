@@ -137,14 +137,12 @@ function AdminPage() {
 
     const unsubSessions = onSnapshot(collection(db, "user_sessions"), (snap) => {
       sessionsDocs = snap.docs;
-      initialized |= 1;
-      if (initialized === 3) updateRows();
+      updateRows();
     }, (e) => setErr(e.message));
 
     const unsubAdmins = onSnapshot(collection(db, "admins"), (snap) => {
       adminsDocs = snap.docs;
-      initialized |= 2;
-      if (initialized === 3) updateRows();
+      updateRows();
     }, (e) => setErr(e.message));
 
     return () => {

@@ -43,6 +43,7 @@ function AuthPage() {
         navigate({ to: "/" });
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        trackSession(userCredential.user.uid).catch(() => {});
         await sendEmailVerification(userCredential.user);
         setMsg("Account created! Please check your email to verify your account before signing in.");
         setMode("signin");
