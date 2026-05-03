@@ -505,7 +505,21 @@ function AdminPage() {
                                       : "border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/10"
                                   }`}
                                 >
-                                  {busyId === `ban_${r.id}` ? "…" : r.is_banned ? "Restore" : "Purge"}
+                                  {busyId === `ban_${r.id}` ? "…" : r.is_banned ? "Unban" : "Ban"}
+                                </button>
+                              )}
+
+                              {!r.is_root_owner && (
+                                <button
+                                  disabled={busyId === r.id || r.is_banned}
+                                  onClick={() => toggleAdmin(r)}
+                                  className={`h-8 px-4 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all disabled:opacity-50 ${
+                                    r.is_admin
+                                      ? "border-orange-500/30 text-orange-500 bg-orange-500/5 hover:bg-orange-500/10"
+                                      : "border-primary/30 text-primary bg-primary/5 hover:bg-primary/10"
+                                  }`}
+                                >
+                                  {busyId === r.id ? "…" : r.is_admin ? "Revoke Admin" : "Grant Admin"}
                                 </button>
                               )}
                             </div>
