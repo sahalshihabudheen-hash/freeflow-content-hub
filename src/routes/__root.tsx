@@ -47,7 +47,7 @@ function MaintenanceScreen({ onSignOut }: { onSignOut: () => void }) {
     // Play audio
     const audio = new Audio("/maintenance.wav");
     audio.loop = true;
-    audio.volume = 0.35;
+    audio.volume = 1.0;
     audioRef.current = audio;
     audio.play().catch(() => {
       // Auto-play blocked; play on first user interaction
