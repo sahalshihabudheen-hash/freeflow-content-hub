@@ -8,6 +8,7 @@ import { logSearch, logClick } from "@/lib/search-analytics";
 import { useSearchDebounce, DEBOUNCE_MIN, DEBOUNCE_MAX, DEBOUNCE_DEFAULT } from "@/hooks/use-search-debounce";
 import { auth } from "@/lib/firebase";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useAdultAccess } from "@/hooks/use-adult-access";
 
 function useDebounced<T>(value: T, ms: number): T {
   const [d, setD] = useState(value);
@@ -431,6 +432,7 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const { isAdmin } = useIsAdmin();
+  const { hasAdultAccess } = useAdultAccess();
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -464,9 +466,11 @@ export function Header() {
           <Link to="/search" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }}>
             Browse
           </Link>
-          <Link to="/adult" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }}>
-            Mature
-          </Link>
+          {hasAdultAccess && (
+            <Link to="/adult" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }}>
+              Mature
+            </Link>
+          )}
           {isAdmin && (
             <Link to="/admin" className="rounded-full px-3 py-2 text-primary transition hover:bg-primary/10 font-medium" activeProps={{ className: "bg-primary/15" }}>
               Admin
@@ -506,9 +510,11 @@ export function Header() {
               <Link to="/search" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
                 <Compass className="h-4 w-4 text-primary" /> Browse
               </Link>
-              <Link to="/adult" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
-                <BookOpen className="h-4 w-4 text-destructive" /> Mature Hub
-              </Link>
+              {hasAdultAccess && (
+                <Link to="/adult" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
+                  <BookOpen className="h-4 w-4 text-destructive" /> Mature Hub
+                </Link>
+              )}
               {isAdmin && (
                 <Link to="/admin" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-primary/10 transition text-primary font-medium">
                   <ShieldCheck className="h-4 w-4" /> Admin Dashboard
