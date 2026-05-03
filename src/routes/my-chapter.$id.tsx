@@ -13,9 +13,14 @@ function publicUrl(path: string): string {
   return supabase.storage.from("comics").getPublicUrl(path).data.publicUrl;
 }
 
+import { useReadingProgress } from "@/hooks/use-reading-progress";
+
+type Comic = { id: string; title: string; cover_path: string | null };
+
 function MyChapterReader() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const { updateProgress } = useReadingProgress();
   const [chap, setChap] = useState<Chap | null>(null);
   const [siblings, setSiblings] = useState<Chap[]>([]);
 
@@ -27,6 +32,22 @@ function MyChapterReader() {
         const c = data as Chap | null;
         setChap(c);
         if (c) {
+          // Fetch comic details for progress tracking
+          const { data: comic } = await supabase.from("user_comics").select("id,title,cover_path").eq("id", c.comic_id).maybeSingle();
+          const comicData = comic as Comic | null;
+          
+          if (comicData) {
+            updateProgress({
+              mangaId: c.comic_id,
+              mangaTitle: comicData.title,
+              coverUrl: comicData.cover_path ? publicUrl(comicData.cover_path) : "",
+              chapterId: id,
+              chapterNumber: c.number,
+              chapterTitle: c.title || undefined,
+              isUserComic: true
+            });
+          }
+
           const { data: sibs } = await supabase.from("user_chapters")
             .select("id,comic_id,number,title,page_paths,created_at")
             .eq("comic_id", c.comic_id).order("created_at", { ascending: true });
@@ -34,6 +55,7 @@ function MyChapterReader() {
         }
       });
   }, [id]);
+
 
   if (!chap) return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 

@@ -12,7 +12,8 @@ import {
 } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
 import { PreferencesModal, type Prefs } from "@/components/PreferencesModal";
-import { Loader2, SlidersHorizontal, BookOpen, X, Play, Compass, Zap } from "lucide-react";
+import { Loader2, SlidersHorizontal, BookOpen, X, Play, Compass, Zap, History } from "lucide-react";
+import { useReadingProgress, type ProgressItem } from "@/hooks/use-reading-progress";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -53,8 +54,7 @@ function Index() {
   const [genreSections, setGenreSections] = useState<Record<string, Manga[]>>({});
   const [error, setError] = useState<string | null>(null);
   
-  const [lastRead, setLastRead] = useState<any>(null);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const { history: readingHistory, loading: historyLoading } = useReadingProgress();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Discovery logic
@@ -80,32 +80,8 @@ function Index() {
     } else {
       setShowModal(true);
     }
-
-    // Check for last read
-    try {
-      const last = localStorage.getItem("jarvis.lastRead");
-      if (last) {
-        const parsed = JSON.parse(last);
-        if (parsed && parsed.chapterId && parsed.mangaId) {
-          setLastRead(parsed);
-          
-          // Only show if it's been less than 24h but more than 5 minutes
-          const now = Date.now();
-          const diff = now - (parsed.timestamp || 0);
-          if (diff > 5 * 60 * 1000 && diff < 24 * 60 * 60 * 1000) {
-            setTimeout(() => {
-              setShowWelcome(true);
-              const audio = new Audio("/notification.mp3");
-              audio.volume = 0.5;
-              audio.play().catch(() => {});
-            }, 1500);
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Failed to parse reading history", e);
-    }
   }, []);
+
 
   // Fetch when prefs change
   useEffect(() => {
@@ -164,40 +140,8 @@ function Index() {
         />
       )}
 
-      {/* Welcome Back Notification */}
-      {showWelcome && lastRead?.chapterId && lastRead?.mangaId && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000" />
-            <div className="relative flex items-center gap-4 bg-background/80 backdrop-blur-3xl border border-white/10 p-4 rounded-2xl shadow-2xl min-w-[300px]">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <Play className="h-6 w-6 fill-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">Welcome Back</p>
-                <p className="text-sm font-bold truncate pr-4">Continue {lastRead.mangaTitle}?</p>
-              </div>
-              <Link
-                to="/chapter/$id"
-                params={{ id: lastRead.chapterId }}
-                search={{ manga: lastRead.mangaId }}
-                onClick={() => setShowWelcome(false)}
-                className="h-10 px-6 rounded-xl bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center shadow-lg shadow-primary/20"
-              >
-                Read
-              </Link>
-              <button 
-                onClick={() => setShowWelcome(false)}
-                className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background border border-border flex items-center justify-center hover:bg-muted transition-colors"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Hero */}
+
       <section className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 opacity-30" style={{ background: "var(--gradient-hero)" }} />
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at top, transparent, var(--background) 70%)" }} />
@@ -215,6 +159,58 @@ function Index() {
       </section>
 
       <div className="container mx-auto px-4 py-12 space-y-16">
+        {readingHistory.length > 0 && (
+          <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-inner shadow-primary/20">
+                  <History className="h-6 w-6" />
+                </div>
+                <h2 className="text-2xl font-black tracking-tighter uppercase italic">Continue <span className="text-primary">Reading</span></h2>
+              </div>
+              <button 
+                onClick={() => localStorage.removeItem("jarvis.readingHistory.v1")}
+                className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors"
+              >
+                Clear History
+              </button>
+            </div>
+            <div className="flex gap-4 md:gap-6 overflow-x-auto pb-6 -mx-4 px-4 scrollbar-hide snap-x">
+              {readingHistory.map((item) => (
+                <Link
+                  key={item.mangaId}
+                  to={item.isUserComic ? "/my-chapter/$id" : "/chapter/$id"}
+                  params={{ id: item.chapterId }}
+                  search={!item.isUserComic ? { manga: item.mangaId } : {}}
+                  className="group relative flex-none w-40 sm:w-48 aspect-[2/3] rounded-2xl overflow-hidden border border-border/50 shadow-xl snap-start"
+                >
+                  <img 
+                    src={item.coverUrl} 
+                    alt={item.mangaTitle} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent p-4 flex flex-col justify-end">
+                    <h3 className="text-sm font-bold text-white line-clamp-2 mb-1 group-hover:text-primary transition-colors">{item.mangaTitle}</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">
+                        CH {item.chapterNumber}
+                      </span>
+                      {item.isUserComic && (
+                        <span className="text-[8px] bg-white/10 text-white/60 px-1 py-0.5 rounded uppercase tracking-widest">
+                          Local
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Play className="h-4 w-4 fill-white text-white" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {prefs && (
           <div className="flex flex-wrap items-center gap-3 justify-between">
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">

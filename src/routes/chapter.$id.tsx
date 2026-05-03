@@ -14,10 +14,13 @@ export const Route = createFileRoute("/chapter/$id")({
   component: ChapterReader,
 });
 
+import { useReadingProgress } from "@/hooks/use-reading-progress";
+
 function ChapterReader() {
   const { id } = Route.useParams();
   const { manga: mangaId, lang } = Route.useSearch();
   const navigate = useNavigate();
+  const { updateProgress } = useReadingProgress();
   const [pages, setPages] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [siblings, setSiblings] = useState<Chapter[] | null>(null);
@@ -50,16 +53,20 @@ function ChapterReader() {
       .catch((e) => setError(e.message));
     window.scrollTo({ top: 0 });
     
-    // Save as last read
-    if (mangaId && manga) {
-      localStorage.setItem("jarvis.lastRead", JSON.stringify({
+    // Save reading progress
+    if (mangaId && manga && currentChapter) {
+      updateProgress({
         mangaId,
-        chapterId: id,
         mangaTitle: manga.title,
-        timestamp: Date.now()
-      }));
+        coverUrl: manga.coverUrl,
+        chapterId: id,
+        chapterNumber: currentChapter.chapter || "Reading",
+        chapterTitle: currentChapter.title || undefined,
+        isUserComic: false
+      });
     }
-  }, [id, mangaId, manga]);
+  }, [id, mangaId, manga, currentChapter]);
+
 
   useEffect(() => {
     if (!mangaId) return;
