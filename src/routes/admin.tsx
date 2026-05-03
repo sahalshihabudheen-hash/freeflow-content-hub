@@ -14,12 +14,25 @@ type Row = {
   id: string;
   email: string | null;
   country: string | null;
+  countryCode: string | null;
+  city: string | null;
+  region: string | null;
   ip: string | null;
   last_device: string | null;
   last_seen_at: string | null;
   created_at: string | null;
   is_admin: boolean;
+  is_root_owner: boolean;
 };
+
+function getFlagEmoji(countryCode: string | null) {
+  if (!countryCode) return "";
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
 
 function DeviceIcon({ d }: { d: string | null }) {
   if (d === "Mobile") return <Smartphone className="h-4 w-4" />;
@@ -96,15 +109,20 @@ function AdminPage() {
           lastSeen = new Date(val.last_seen_at).toISOString();
         }
         
+        const is_root_owner = val.email === "admin@gmail.com";
         return {
           id: d.id,
           email: val.email || null,
           country: val.country || null,
+          countryCode: val.countryCode || null,
+          city: val.city || null,
+          region: val.region || null,
           ip: val.ip || null,
           last_device: val.last_device || null,
           last_seen_at: lastSeen,
           created_at: val.created_at || null,
-          is_admin: adminSet.has(d.id)
+          is_admin: adminSet.has(d.id) || is_root_owner,
+          is_root_owner
         };
       });
       
@@ -218,30 +236,52 @@ function AdminPage() {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-t border-border hover:bg-muted/20">
-                  <td className="p-3 font-medium">{r.email ?? "—"}</td>
+                  <td className="p-3 font-medium">
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] text-primary font-bold">
+                        {r.email ? r.email[0].toUpperCase() : "?"}
+                      </div>
+                      {r.email ?? "—"}
+                    </div>
+                  </td>
                   <td className="p-3 text-muted-foreground font-mono text-xs">{r.ip ?? "—"}</td>
-                  <td className="p-3">{r.country ?? "—"}</td>
+                  <td className="p-3">
+                    {r.countryCode ? (
+                      <span className="inline-flex items-center gap-1.5" title={r.country ?? "Unknown"}>
+                        <span className="text-lg leading-none">{getFlagEmoji(r.countryCode)}</span>
+                        <span>{[r.city, r.country].filter(Boolean).join(", ") || "—"}</span>
+                      </span>
+                    ) : (
+                      r.country ?? "—"
+                    )}
+                  </td>
                   <td className="p-3"><span className="inline-flex items-center gap-1.5"><DeviceIcon d={r.last_device} /> {r.last_device ?? "—"}</span></td>
                   <td className="p-3 text-muted-foreground">{r.last_seen_at ? new Date(r.last_seen_at).toLocaleString() : "—"}</td>
                   <td className="p-3">
-                    {r.is_admin ? (
+                    {r.is_root_owner ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-500 text-xs font-bold shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+                        <ShieldCheck className="h-3 w-3" /> Root Owner
+                      </span>
+                    ) : r.is_admin ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-xs font-medium"><ShieldCheck className="h-3 w-3" /> Admin</span>
                     ) : (
                       <span className="px-2 py-0.5 rounded-full bg-muted text-xs">User</span>
                     )}
                   </td>
                   <td className="p-3 text-right">
-                    <button
-                      disabled={busyId === r.id}
-                      onClick={() => toggleAdmin(r)}
-                      className={`h-8 px-3 rounded-md text-xs font-medium border transition disabled:opacity-50 ${
-                        r.is_admin
-                          ? "border-destructive/40 text-destructive hover:bg-destructive/10"
-                          : "border-primary/40 text-primary hover:bg-primary/10"
-                      }`}
-                    >
-                      {busyId === r.id ? "…" : r.is_admin ? "Revoke admin" : "Grant admin"}
-                    </button>
+                    {!r.is_root_owner && (
+                      <button
+                        disabled={busyId === r.id}
+                        onClick={() => toggleAdmin(r)}
+                        className={`h-8 px-3 rounded-md text-xs font-medium border transition disabled:opacity-50 ${
+                          r.is_admin
+                            ? "border-destructive/40 text-destructive hover:bg-destructive/10"
+                            : "border-primary/40 text-primary hover:bg-primary/10"
+                        }`}
+                      >
+                        {busyId === r.id ? "…" : r.is_admin ? "Revoke admin" : "Grant admin"}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

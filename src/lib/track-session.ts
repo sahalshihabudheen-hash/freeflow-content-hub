@@ -12,6 +12,7 @@ function getDeviceType() {
   return "Monitor";
 }
 
+
 export async function trackSession(uid?: string) {
   try {
     const user = auth.currentUser;
@@ -20,6 +21,9 @@ export async function trackSession(uid?: string) {
 
     let ip = "Unknown";
     let country = "Unknown";
+    let countryCode = "";
+    let city = "";
+    let region = "";
 
     try {
       const res = await fetch("https://ipapi.co/json/");
@@ -27,6 +31,9 @@ export async function trackSession(uid?: string) {
         const data = await res.json();
         ip = data.ip || "Unknown";
         country = data.country_name || "Unknown";
+        countryCode = data.country_code || "";
+        city = data.city || "";
+        region = data.region || "";
       }
     } catch (e) {
       console.warn("Failed to get location info");
@@ -38,6 +45,9 @@ export async function trackSession(uid?: string) {
       email: user?.email || "Unknown",
       ip,
       country,
+      countryCode,
+      city,
+      region,
       last_device: device,
       last_seen_at: serverTimestamp(),
       created_at: user?.metadata?.creationTime || new Date().toISOString()
