@@ -295,7 +295,7 @@ function RootComponent() {
   return (
     <div className="min-h-screen flex flex-col">
       {location.pathname !== "/auth" && <Header />}
-      <main className="flex-1">
+      <main className={`flex-1 ${location.pathname !== "/auth" ? "pt-28" : ""}`}>
         <Outlet />
       </main>
       {location.pathname !== "/auth" && (

@@ -350,7 +350,7 @@ function AdminPage() {
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-7xl">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 bg-white/5 p-6 rounded-[2rem] border border-white/10 backdrop-blur-2xl">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
             <ShieldCheck className="h-7 w-7 text-primary" />
@@ -380,13 +380,27 @@ function AdminPage() {
       <div className="animate-in fade-in duration-500">
         {activeTab === "users" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between px-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
                 User Management
               </h2>
-              <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-                {rows?.length ?? 0} Connected Nodes
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleMaintenance}
+                  disabled={maintenanceBusy}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                    maintenanceMode 
+                      ? "bg-red-500/10 border-red-500/30 text-red-500 hover:bg-red-500/20" 
+                      : "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20"
+                  }`}
+                >
+                  <Power className="h-3 w-3" />
+                  {maintenanceMode ? "Disable Maintenance" : "Enable Maintenance"}
+                </button>
+                <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+                  {rows?.length ?? 0} Connected Nodes
+                </div>
               </div>
             </div>
 
