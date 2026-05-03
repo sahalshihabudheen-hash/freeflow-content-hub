@@ -3,11 +3,6 @@ import { useEffect, useState } from "react";
 import { getMatureContent, getAnimatedComics, searchManga, type Manga } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
 import { Loader2, Lock, Search, PlayCircle, Sparkles } from "lucide-react";
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { getMatureContent, getAnimatedComics, searchManga, type Manga } from "@/lib/mangadex";
-import { MangaCard } from "@/components/MangaCard";
-import { Loader2, Lock, Search, PlayCircle, Sparkles } from "lucide-react";
 import { useAdultAccess } from "@/hooks/use-adult-access";
 
 export const Route = createFileRoute("/adult")({
@@ -109,132 +104,158 @@ function AdultHub() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 space-y-12">
+    <div className="container mx-auto px-4 py-24 space-y-20">
       <header className="text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-destructive/10 text-destructive text-xs font-black uppercase tracking-widest border border-destructive/20">
-          <Sparkles className="h-3 w-3" /> Restricted Content
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-black uppercase tracking-widest border border-destructive/20 animate-pulse">
+          <Sparkles className="h-3 w-3" /> Restricted Access Only
         </div>
-        <h1 className="text-5xl font-black tracking-tighter text-foreground uppercase italic">Mature <span className="text-destructive">Hub</span></h1>
-        <p className="text-muted-foreground max-w-xl mx-auto text-sm">
-          Discover restricted manga and manhwa. This area is strictly for adults.
+        <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-foreground uppercase italic leading-none">
+          Mature <span className="text-destructive drop-shadow-[0_0_20px_rgba(239,68,68,0.4)]">Hub</span>
+        </h1>
+        <p className="text-muted-foreground max-w-xl mx-auto text-sm italic font-medium">
+          The ultimate sanctuary for restricted content. Browse with caution.
         </p>
       </header>
 
       {/* Animated Section */}
       {animated && animated.length > 0 && (
-        <section className="space-y-6">
-          <div className="flex items-center gap-2">
-            <PlayCircle className="h-5 w-5 text-destructive" />
-            <h2 className="text-xl font-bold uppercase tracking-tight">Animated Mature Comics</h2>
+        <section className="space-y-8">
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center gap-3">
+               <div className="h-10 w-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive">
+                 <PlayCircle className="h-6 w-6" />
+               </div>
+               <h2 className="text-2xl font-black uppercase tracking-tight italic">Animated <span className="text-destructive">Exclusive</span></h2>
+            </div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-white/5 px-3 py-1 rounded-full">
+              {animated.length} Titles Found
+            </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
             {animated.map(m => <MangaCard key={m.id} manga={m} />)}
           </div>
         </section>
       )}
 
-      <hr className="border-border/40" />
-
-      {/* Search & Filters */}
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-full mb-1">Filter by Taste</p>
-          {MATURE_GENRES.map(g => (
-            <button
-              key={g}
-              onClick={() => toggleGenre(g)}
-              className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
-                selectedGenres.includes(g) 
-                  ? "bg-destructive border-destructive text-white shadow-lg shadow-destructive/20" 
-                  : "border-border hover:border-destructive/40 text-muted-foreground"
-              }`}
-            >
-              {g}
-            </button>
-          ))}
-          {selectedGenres.length > 0 && (
-            <button 
-              onClick={() => setSelectedGenres([])}
-              className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-destructive hover:underline"
-            >
-              Clear All
-            </button>
-          )}
+      <div className="space-y-10">
+        <div className="flex items-center gap-3">
+           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+             <Search className="h-6 w-6" />
+           </div>
+           <h2 className="text-2xl font-black uppercase tracking-tight italic">Discover <span className="text-primary">Library</span></h2>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex bg-secondary/50 p-1 rounded-xl w-full md:w-auto">
-            <button
-              onClick={() => setSource("manga")}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
-                source === "manga" ? "bg-background text-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Manga
-            </button>
-            <button
-              onClick={() => setSource("manhwa")}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
-                source === "manhwa" ? "bg-background text-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Manhwa
-            </button>
+        {/* Search & Filters */}
+        <div className="space-y-8 bg-secondary/20 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-xl">
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-full mb-2">Filter by Taste Profile</p>
+            {MATURE_GENRES.map(g => (
+              <button
+                key={g}
+                onClick={() => toggleGenre(g)}
+                className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all duration-300 ${
+                  selectedGenres.includes(g) 
+                    ? "bg-destructive border-destructive text-white shadow-xl shadow-destructive/30 scale-105" 
+                    : "border-white/10 hover:border-destructive/40 text-muted-foreground hover:bg-white/5"
+                }`}
+              >
+                {g}
+              </button>
+            ))}
+            {selectedGenres.length > 0 && (
+              <button 
+                onClick={() => setSelectedGenres([])}
+                className="px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/10 transition-all"
+              >
+                Purge Filters
+              </button>
+            )}
           </div>
 
-          <form onSubmit={handleSearch} className="relative w-full md:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search within Mature Hub..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 focus:border-destructive transition-all"
-            />
-            {isSearching && (
-              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-          </form>
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div className="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 w-full lg:w-auto">
+              <button
+                onClick={() => setSource("manga")}
+                className={`flex-1 lg:flex-none px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                  source === "manga" ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                }`}
+              >
+                Adult Manga
+              </button>
+              <button
+                onClick={() => setSource("manhwa")}
+                className={`flex-1 lg:flex-none px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                  source === "manhwa" ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                }`}
+              >
+                Adult Manhwa
+              </button>
+            </div>
+
+            <form onSubmit={handleSearch} className="relative w-full lg:max-w-md group">
+              <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity rounded-2xl" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <input
+                type="text"
+                placeholder="Search the encrypted archives..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="relative w-full h-14 pl-12 pr-6 rounded-2xl border border-white/10 bg-black/40 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              />
+              {isSearching && (
+                <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-primary" />
+              )}
+            </form>
+          </div>
         </div>
       </div>
 
       {error && (
-        <div className="max-w-md mx-auto text-center p-6 rounded-2xl bg-destructive/5 text-destructive border border-destructive/10">
-          <p className="font-bold uppercase tracking-widest text-xs mb-2">Sync Error</p>
-          <p className="text-sm opacity-80">{error}</p>
+        <div className="max-w-md mx-auto text-center p-8 rounded-3xl bg-destructive/5 text-destructive border border-destructive/10 animate-shake">
+          <p className="font-black uppercase tracking-widest text-xs mb-3">System Override Error</p>
+          <p className="text-sm font-medium opacity-80">{error}</p>
         </div>
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-destructive" />
-          <p className="text-xs font-black uppercase tracking-widest text-muted-foreground animate-pulse">Scanning encrypted vault...</p>
+        <div className="flex flex-col items-center justify-center py-32 gap-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-destructive/20 blur-2xl animate-pulse rounded-full" />
+            <Loader2 className="relative h-16 w-16 animate-spin text-destructive" />
+          </div>
+          <p className="text-xs font-black uppercase tracking-widest text-muted-foreground animate-pulse tracking-[0.2em]">Scanning neural gateway...</p>
         </div>
       ) : mangaList.length === 0 ? (
-        <div className="text-center text-muted-foreground py-20 bg-secondary/20 rounded-3xl border border-dashed border-border">
-          <Search className="h-12 w-12 mx-auto mb-4 opacity-20" />
-          <p className="text-sm font-medium">No restricted items found matching your criteria.</p>
+        <div className="text-center text-muted-foreground py-32 bg-secondary/10 rounded-[3rem] border border-dashed border-white/10">
+          <Search className="h-16 w-16 mx-auto mb-6 opacity-10" />
+          <p className="text-lg font-black uppercase tracking-tighter italic">Void Detected</p>
+          <p className="text-xs font-medium opacity-50 mt-2 tracking-widest uppercase">No matches found in this sector.</p>
         </div>
       ) : (
-        <div className="space-y-12">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 animate-fade-in">
+        <div className="space-y-16">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8 animate-fade-in">
             {mangaList.map((m) => (
-              <MangaCard key={m.id} manga={m} />
+              <div key={m.id} className="hover:scale-105 transition-transform duration-500">
+                <MangaCard manga={m} />
+              </div>
             ))}
           </div>
 
-          <div className="flex justify-center pb-12">
+          <div className="flex justify-center pb-20">
             <button
               onClick={loadMore}
               disabled={loadingMore}
-              className="h-14 px-10 rounded-2xl bg-secondary text-secondary-foreground font-black uppercase tracking-widest text-xs hover:bg-secondary/80 disabled:opacity-50 transition-all shadow-xl shadow-black/5 flex items-center gap-3"
+              className="group relative h-16 px-12 rounded-2xl bg-secondary text-foreground font-black uppercase tracking-widest text-xs hover:bg-primary hover:text-primary-foreground disabled:opacity-50 transition-all shadow-2xl shadow-black/20 flex items-center gap-4 overflow-hidden"
             >
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
               {loadingMore ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Fetching More
+                  <Loader2 className="relative h-5 w-5 animate-spin" /> Fetching Archives
                 </>
               ) : (
-                "Load More Results"
+                <>
+                  <Zap className="relative h-5 w-5" /> Expand Results
+                </>
               )}
             </button>
           </div>

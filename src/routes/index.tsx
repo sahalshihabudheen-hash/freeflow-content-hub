@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState, useRef } from "react";
 import {
   getPopular,
   getRecentlyUpdated,
@@ -57,7 +57,7 @@ function Index() {
   // On mount: load saved prefs or open modal
   useEffect(() => {
     const saved = loadPrefs();
-    if (saved) {
+    if (saved && saved.genres.length > 0) {
       setPrefs(saved);
     } else {
       setShowModal(true);

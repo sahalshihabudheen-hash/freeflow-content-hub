@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Search, Menu, X, Home, Compass, BookOpen, Loader2, AlertCircle, SlidersHorizontal, SearchX, LogOut, ShieldCheck } from "lucide-react";
+import { Search, Menu, X, Home, Compass, BookOpen, Loader2, SlidersHorizontal, SearchX, LogOut, ShieldCheck, Flame, Zap } from "lucide-react";
 import jarvisLogo from "@/assets/jarvis-comics-logo.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchManga, type Manga } from "@/lib/mangadex";
@@ -432,15 +432,19 @@ function LiveSearch({
 export function Header() {
   const [q, setQ] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { isAdmin } = useIsAdmin();
   const { hasAdultAccess } = useAdultAccess();
 
-  // Hide header on chapter reader for zen mode
-  if (location.pathname.startsWith("/chapter/")) {
-    return null;
-  }
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  if (location.pathname.startsWith("/chapter/")) return null;
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -449,99 +453,131 @@ export function Header() {
     navigate({ to: "/search", search: { q: q.trim() } });
   };
 
-  const closeMenu = () => setMobileOpen(false);
+  const navLinks = [
+    { to: "/", label: "Home", icon: Home },
+    { to: "/search", label: "Browse", icon: Compass },
+    ...(hasAdultAccess ? [{ to: "/adult", label: "Mature", icon: Flame, color: "text-destructive" }] : []),
+  ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/60 glass">
-      <div className="container mx-auto flex h-16 items-center gap-3 px-4 md:h-18 md:gap-4 md:py-2">
-        <Link to="/" className="shrink-0 hover-scale" onClick={closeMenu}>
-          <img
-            src={jarvisLogo}
-            alt="JARVIS COMICS"
-            className="h-9 w-auto sm:h-12"
-            loading="eager"
-          />
-        </Link>
-
-        <div className="mx-auto flex-1 max-w-xl hidden sm:block">
-          <LiveSearch value={q} onChange={setQ} onSubmit={onSubmit} onPick={closeMenu} />
-        </div>
-
-        <nav className="hidden items-center gap-1 text-sm md:flex">
-          <Link to="/" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }} activeOptions={{ exact: true }}>
-            Home
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 pt-4 px-4 ${isScrolled ? "pb-2" : "pb-4"}`}>
+      <nav className={`mx-auto max-w-7xl transition-all duration-500 rounded-[2rem] border border-white/10 backdrop-blur-3xl shadow-2xl ${
+        isScrolled ? "bg-background/80 py-2 px-6 scale-[0.98] shadow-primary/5" : "bg-background/60 py-4 px-8 scale-100"
+      }`}>
+        <div className="flex items-center justify-between gap-4 md:gap-8">
+          <Link to="/" className="flex items-center gap-3 group outline-none shrink-0" onClick={() => setMobileOpen(false)}>
+            <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-primary flex items-center justify-center overflow-hidden transition-transform duration-700 group-hover:rotate-[360deg] group-hover:scale-110 shadow-lg shadow-primary/20">
+               <img src={jarvisLogo} alt="" className="h-7 w-7 sm:h-8 sm:w-8 object-contain" />
+               <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent" />
+            </div>
+            <div className="hidden sm:flex flex-col">
+              <span className="text-xl font-black tracking-tighter uppercase italic leading-none">Jarvis</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary leading-none mt-1">Comics</span>
+            </div>
           </Link>
-          <Link to="/search" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }}>
-            Browse
-          </Link>
-          {hasAdultAccess && (
-            <Link to="/adult" className="rounded-full px-3 py-2 text-muted-foreground transition hover:bg-secondary hover:text-foreground" activeProps={{ className: "rounded-full px-3 py-2 text-foreground bg-secondary" }}>
-              Mature
-            </Link>
-          )}
-          {isAdmin && (
-            <Link to="/admin" className="rounded-full px-3 py-2 text-primary transition hover:bg-primary/10 font-medium" activeProps={{ className: "bg-primary/15" }}>
-              Admin
-            </Link>
-          )}
-          <button 
-            onClick={() => auth.signOut()}
-            className="ml-2 inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Log out
-          </button>
-        </nav>
 
-        <ThemeToggle className="hidden sm:inline-flex" />
+          <div className="flex-1 max-w-md hidden md:block">
+            <LiveSearch value={q} onChange={setQ} onSubmit={onSubmit} onPick={() => setMobileOpen(false)} />
+          </div>
 
-        <button
-          onClick={() => setMobileOpen((v) => !v)}
-          className="md:hidden ml-auto h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-secondary transition"
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-      </div>
-
-      <div className="sm:hidden border-t border-border/60 px-4 py-2">
-        <LiveSearch value={q} onChange={setQ} onSubmit={onSubmit} onPick={closeMenu} autoFocus />
-      </div>
-
-      {mobileOpen && (
-        <div className="md:hidden border-t border-border/60 bg-background/95 backdrop-blur-xl animate-fade-in">
-          <div className="container mx-auto px-4 py-4 space-y-3">
-            <nav className="grid gap-1 text-sm">
-              <Link to="/" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
-                <Home className="h-4 w-4 text-primary" /> Home
-              </Link>
-              <Link to="/search" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
-                <Compass className="h-4 w-4 text-primary" /> Browse
-              </Link>
-              {hasAdultAccess && (
-                <Link to="/adult" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-secondary transition">
-                  <BookOpen className="h-4 w-4 text-destructive" /> Mature Hub
-                </Link>
-              )}
-              {isAdmin && (
-                <Link to="/admin" onClick={closeMenu} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-primary/10 transition text-primary font-medium">
-                  <ShieldCheck className="h-4 w-4" /> Admin Dashboard
-                </Link>
-              )}
-              <div className="flex items-center justify-between rounded-lg px-3 py-2 mt-2">
-                <span className="text-muted-foreground">Theme</span>
-                <ThemeToggle />
-              </div>
-              <button 
-                onClick={() => { auth.signOut(); closeMenu(); }}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-3 mt-2 text-destructive hover:bg-destructive/10 transition text-left font-medium"
+          <div className="hidden md:flex items-center gap-1 bg-secondary/20 p-1 rounded-2xl border border-white/5">
+            {navLinks.map(({ to, label, icon: Icon, color }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                  location.pathname === to 
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" 
+                    : `text-muted-foreground hover:text-foreground hover:bg-white/5 ${color || ""}`
+                }`}
+                activeOptions={{ exact: to === "/" }}
               >
-                <LogOut className="h-4 w-4" /> Log out
-              </button>
-            </nav>
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <ThemeToggle className="hidden sm:inline-flex" />
+
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className={`hidden lg:flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  location.pathname.startsWith("/admin") 
+                    ? "bg-amber-500 text-white shadow-lg" 
+                    : "text-amber-500 hover:bg-amber-500/10 border border-amber-500/20"
+                }`}
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Admin
+              </Link>
+            )}
+
+            <button
+              onClick={() => auth.signOut()}
+              className="hidden sm:flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/50 border border-white/5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden h-11 w-11 flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 active:scale-90"
+            >
+              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
-      )}
+      </nav>
+
+      {/* Mobile Menu */}
+      <div className={`fixed inset-0 z-[-1] transition-all duration-500 bg-background/95 backdrop-blur-3xl md:hidden ${
+        mobileOpen ? "opacity-100 pointer-events-auto translate-y-0" : "opacity-0 pointer-events-none -translate-y-10"
+      }`}>
+        <div className="flex flex-col items-center justify-center h-full gap-6 px-6 text-center">
+          <div className="w-full mb-8">
+             <LiveSearch value={q} onChange={setQ} onSubmit={onSubmit} onPick={() => setMobileOpen(false)} autoFocus />
+          </div>
+          <div className="w-full space-y-3">
+            {navLinks.map(({ to, label, icon: Icon, color }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center justify-center gap-4 w-full py-5 rounded-3xl text-xl font-black uppercase tracking-tighter transition-all ${
+                  location.pathname === to 
+                    ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/20 scale-105" 
+                    : `bg-secondary/20 border border-white/5 text-muted-foreground ${color || ""}`
+                }`}
+              >
+                <Icon className="h-6 w-6" />
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="w-full pt-8 grid grid-cols-2 gap-3">
+             {isAdmin && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-3 py-4 rounded-3xl border border-amber-500/20 text-amber-500 font-black uppercase tracking-widest text-[10px]"
+                >
+                  <ShieldCheck className="h-4 w-4" /> Admin
+                </Link>
+             )}
+             <button
+               onClick={() => { auth.signOut(); setMobileOpen(false); }}
+               className="flex items-center justify-center gap-3 py-4 rounded-3xl bg-destructive/10 border border-destructive/20 text-destructive font-black uppercase tracking-widest text-[10px]"
+             >
+               <LogOut className="h-4 w-4" /> Exit
+             </button>
+          </div>
+        </div>
+      </div>
     </header>
   );
 }

@@ -92,38 +92,78 @@ function MangaDetail() {
   return (
     <div>
       {/* Banner */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
         <div
-          className="absolute inset-0 blur-3xl opacity-30"
+          className="absolute inset-0 blur-[100px] opacity-40 scale-150"
           style={{ backgroundImage: `url(${manga.coverUrl})`, backgroundSize: "cover", backgroundPosition: "center" }}
         />
-        <div className="absolute inset-0 bg-background/80" />
-        <div className="container relative mx-auto px-4 py-10 md:py-16">
-          <div className="flex flex-col md:flex-row gap-8">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
+        
+        <div className="container relative mx-auto px-4 py-12 md:py-20">
+          <div className="flex flex-col md:flex-row gap-10 items-start">
             <div
-              className="w-48 md:w-64 shrink-0 mx-auto md:mx-0 aspect-[2/3] rounded-xl overflow-hidden border border-border"
-              style={{ boxShadow: "var(--shadow-glow)" }}
+              className="w-56 md:w-72 shrink-0 mx-auto md:mx-0 group relative"
             >
-              {manga.coverUrl && (
-                <img src={manga.coverUrl} alt={manga.title} className="h-full w-full object-cover" />
-              )}
-            </div>
-            <div className="flex-1">
-              <h1 className="text-3xl md:text-5xl font-bold">{manga.title}</h1>
-              <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-secondary">
-                  <Calendar className="h-3 w-3" /> {manga.year ?? "—"}
-                </span>
-                <span className="px-2 py-1 rounded-md bg-secondary capitalize">{manga.status}</span>
+              <div className="absolute -inset-4 bg-primary/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              <div className="relative aspect-[2/3] rounded-2xl overflow-hidden border border-white/10 shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
+                {manga.coverUrl && (
+                  <img src={manga.coverUrl} alt={manga.title} className="h-full w-full object-cover" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {manga.tags.slice(0, 8).map((t) => (
-                  <span key={t} className="text-xs px-2 py-1 rounded-md border border-border text-muted-foreground">{t}</span>
+            </div>
+
+            <div className="flex-1 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div className="space-y-2">
+                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
+                      <Sparkles className="h-3 w-3" /> JARVIS EXCLUSIVE
+                   </div>
+                   <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground uppercase italic leading-none">
+                     {manga.title}
+                   </h1>
+                </div>
+
+                <button 
+                  onClick={handleShare}
+                  className={`group relative inline-flex items-center gap-3 h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs transition-all duration-500 ${
+                    copied 
+                    ? "bg-green-500 text-white shadow-xl shadow-green-500/20" 
+                    : "bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95"
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
+                  {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4 animate-bounce-subtle" />}
+                  {copied ? "Copied!" : "Share Series"}
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary/50 border border-white/5 text-xs font-bold">
+                  <Calendar className="h-3.5 w-3.5 text-primary" /> {manga.year ?? "—"}
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary/50 border border-white/5 text-xs font-bold uppercase tracking-widest">
+                  <Zap className="h-3.5 w-3.5 text-primary" /> {manga.status}
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary/50 border border-white/5 text-xs font-bold uppercase tracking-widest">
+                  <ShieldAlert className="h-3.5 w-3.5 text-primary" /> {manga.contentRating}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {manga.tags.map((t) => (
+                  <span key={t} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all cursor-default">
+                    {t}
+                  </span>
                 ))}
               </div>
-              <p className="mt-6 text-foreground/90 leading-relaxed line-clamp-6 whitespace-pre-line">
-                {manga.description || "No description available."}
-              </p>
+
+              <div className="relative">
+                <div className="absolute -left-4 top-0 bottom-0 w-1 bg-primary/20 rounded-full" />
+                <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line pl-4 max-w-3xl italic">
+                  {manga.description || "No description available."}
+                </p>
+              </div>
             </div>
           </div>
         </div>
