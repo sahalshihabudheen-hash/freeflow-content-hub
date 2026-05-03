@@ -6,6 +6,7 @@ import {
   getTopRated,
   getNewReleases,
   getByGenre,
+  getAnimatedComics,
   LANGUAGES,
   type Manga,
 } from "@/lib/mangadex";
@@ -45,6 +46,7 @@ function Index() {
   const [recent, setRecent] = useState<Manga[] | null>(null);
   const [topRated, setTopRated] = useState<Manga[] | null>(null);
   const [newReleases, setNewReleases] = useState<Manga[] | null>(null);
+  const [animated, setAnimated] = useState<Manga[] | null>(null);
   const [genreSections, setGenreSections] = useState<Record<string, Manga[]>>({});
   const [error, setError] = useState<string | null>(null);
 
@@ -65,6 +67,7 @@ function Index() {
     setRecent(null);
     setTopRated(null);
     setNewReleases(null);
+    setAnimated(null);
     setGenreSections({});
     setError(null);
 
@@ -73,12 +76,14 @@ function Index() {
       getRecentlyUpdated(18, prefs.genres, prefs.language),
       getTopRated(18, prefs.genres, prefs.language),
       getNewReleases(18, prefs.genres, prefs.language),
+      getAnimatedComics(12, false),
     ])
-      .then(([p, r, t, n]) => {
+      .then(([p, r, t, n, a]) => {
         setPopular(p);
         setRecent(r);
         setTopRated(t);
         setNewReleases(n);
+        setAnimated(a);
       })
       .catch((e) => setError(e.message));
 
@@ -159,9 +164,20 @@ function Index() {
         <Section title="New Releases" items={newReleases} />
         <Section title="Top Rated" items={topRated} />
         <Section title="Recently Updated" items={recent} />
+        <Section title="Animated Comics" items={animated} />
         {prefs?.genres.map((g) => (
           <Section key={g} title={g} items={genreSections[g] ?? null} />
         ))}
+
+        <div className="pt-10 pb-20 text-center border-t border-border/50">
+          <h3 className="text-xl font-bold mb-4 text-muted-foreground">Hungry for more?</h3>
+          <Link 
+            to="/search" 
+            className="inline-flex items-center gap-2 h-14 px-8 rounded-full bg-primary text-primary-foreground font-bold hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20"
+          >
+            Browse All Series
+          </Link>
+        </div>
       </div>
     </div>
   );

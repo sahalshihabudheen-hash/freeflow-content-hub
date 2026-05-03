@@ -13,6 +13,7 @@ function proxiedImage(url: string): string {
 const SFW_PARAMS = "contentRating[]=safe";
 const NSFW_PARAMS = "contentRating[]=erotica&contentRating[]=pornographic&availableTranslatedLanguage[]=en";
 const ALL_CONTENT_PARAMS = "contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic";
+const MOTION_COMIC_TAG = "32fd93a2-7e01-49c3-9b1a-02e03071835e";
 
 export type Manga = {
   id: string;
@@ -118,9 +119,9 @@ function buildFilterParams(genres?: string[], language?: string): string {
   return parts.join("&");
 }
 
-export async function getPopular(limit = 24, genres?: string[], language?: string): Promise<Manga[]> {
+export async function getPopular(limit = 24, offset = 0, genres?: string[], language?: string): Promise<Manga[]> {
   const filters = buildFilterParams(genres, language);
-  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
+  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&offset=${offset}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch popular manga");
   const json = await res.json();
@@ -163,20 +164,30 @@ export async function getByGenre(genre: string, limit = 12, language?: string): 
   return json.data.map(mapManga);
 }
 
-export async function searchManga(query: string, limit = 30): Promise<Manga[]> {
-  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&title=${encodeURIComponent(query)}&includes[]=cover_art&order[relevance]=desc`;
+export async function searchManga(query: string, limit = 30, offset = 0, isAdult = false): Promise<Manga[]> {
+  const params = isAdult ? NSFW_PARAMS : SFW_PARAMS;
+  const url = `${API}/manga?${params}&limit=${limit}&offset=${offset}&title=${encodeURIComponent(query)}&includes[]=cover_art&order[relevance]=desc`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Search failed");
   const json = await res.json();
   return json.data.map(mapManga);
 }
 
-export async function getMatureContent(limit = 24, genres?: string[], language?: string, originalLanguage?: string): Promise<Manga[]> {
+export async function getMatureContent(limit = 24, offset = 0, genres?: string[], language?: string, originalLanguage?: string): Promise<Manga[]> {
   const filters = buildFilterParams(genres, language);
   const origLangParam = originalLanguage ? `&originalLanguage[]=${originalLanguage}` : "";
-  const url = `${API}/manga?${NSFW_PARAMS}&limit=${limit}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${origLangParam}${filters ? `&${filters}` : ""}`;
+  const url = `${API}/manga?${NSFW_PARAMS}&limit=${limit}&offset=${offset}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${origLangParam}${filters ? `&${filters}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch mature content");
+  const json = await res.json();
+  return json.data.map(mapManga);
+}
+
+export async function getAnimatedComics(limit = 12, isAdult = false): Promise<Manga[]> {
+  const params = isAdult ? NSFW_PARAMS : SFW_PARAMS;
+  const url = `${API}/manga?${params}&limit=${limit}&includedTags[]=${MOTION_COMIC_TAG}&includes[]=cover_art&hasAvailableChapters=true&order[followedCount]=desc`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch animated comics");
   const json = await res.json();
   return json.data.map(mapManga);
 }
@@ -210,7 +221,11 @@ export async function getChapters(mangaId: string, limit = 200, language?: strin
         externalUrl: a.externalUrl ?? null,
       };
     })
-    .filter((c: any) => c.pages > 0 || c.externalUrl);
+    .filter((c: any) => c.pages > 0 || c.externalUrl)
+    .filter((c: any, i: number, arr: any[]) => {
+      // Remove duplicate chapters (same number, same language, same scanlator)
+      return arr.findIndex(x => x.chapter === c.chapter && x.language === c.language && x.scanlator === c.scanlator) === i;
+    });
 }
 
 export async function getAvailableLanguages(mangaId: string): Promise<string[]> {

@@ -176,7 +176,7 @@ function MangaDetail() {
                   key={c.id}
                   to="/chapter/$id"
                   params={{ id: c.id }}
-                  search={{ manga: id }}
+                  search={{ manga: id, lang: selectedLang }}
                   className="flex items-center justify-between gap-4 p-4 rounded-lg border border-border bg-card hover:bg-secondary hover:border-primary/40 transition"
                 >
                   {content}

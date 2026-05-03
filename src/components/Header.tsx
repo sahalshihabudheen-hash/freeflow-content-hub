@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Search, Menu, X, Home, Compass, BookOpen, Loader2, AlertCircle, SlidersHorizontal, SearchX, LogOut, ShieldCheck } from "lucide-react";
 import jarvisLogo from "@/assets/jarvis-comics-logo.png";
@@ -427,12 +427,20 @@ function LiveSearch({
   );
 }
 
+
+
 export function Header() {
   const [q, setQ] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAdmin } = useIsAdmin();
   const { hasAdultAccess } = useAdultAccess();
+
+  // Hide header on chapter reader for zen mode
+  if (location.pathname.startsWith("/chapter/")) {
+    return null;
+  }
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();

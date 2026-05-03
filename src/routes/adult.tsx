@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getMatureContent, type Manga } from "@/lib/mangadex";
+import { getMatureContent, getAnimatedComics, searchManga, type Manga } from "@/lib/mangadex";
 import { MangaCard } from "@/components/MangaCard";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2, Lock, Search, PlayCircle, Sparkles } from "lucide-react";
 import { useAdultAccess } from "@/hooks/use-adult-access";
 
 export const Route = createFileRoute("/adult")({
@@ -11,20 +11,66 @@ export const Route = createFileRoute("/adult")({
 
 function AdultHub() {
   const [source, setSource] = useState<"manga" | "manhwa">("manga");
-  const [mangaList, setMangaList] = useState<Manga[] | null>(null);
+  const [mangaList, setMangaList] = useState<Manga[]>([]);
+  const [animated, setAnimated] = useState<Manga[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [query, setQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  
+  const LIMIT = 30;
+
+  const fetchContent = async (newOffset = 0, isInitial = false) => {
+    try {
+      if (isInitial) {
+        setLoading(true);
+        setMangaList([]);
+      } else {
+        setLoadingMore(true);
+      }
+      
+      let results: Manga[] = [];
+      if (query.trim()) {
+        results = await searchManga(query.trim(), LIMIT, newOffset, true);
+      } else {
+        const origLang = source === "manga" ? "ja" : "ko";
+        results = await getMatureContent(LIMIT, newOffset, undefined, undefined, origLang);
+      }
+
+      setMangaList(prev => isInitial ? results : [...prev, ...results]);
+      setError(null);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+      setIsSearching(false);
+    }
+  };
 
   useEffect(() => {
-    setMangaList(null);
-    setError(null);
-    
-    // originalLanguage: ja = Japanese (Manga), ko = Korean (Manhwa)
-    const origLang = source === "manga" ? "ja" : "ko";
-    
-    getMatureContent(48, undefined, undefined, origLang)
-      .then(setMangaList)
-      .catch((e) => setError("Failed to fetch content. " + e.message));
+    fetchContent(0, true);
+    setOffset(0);
   }, [source]);
+
+  useEffect(() => {
+    getAnimatedComics(12, true).then(setAnimated).catch(() => {});
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSearching(true);
+    setOffset(0);
+    fetchContent(0, true);
+  };
+
+  const loadMore = () => {
+    const nextOffset = offset + LIMIT;
+    setOffset(nextOffset);
+    fetchContent(nextOffset);
+  };
 
   const { hasAdultAccess, loading: accessLoading } = useAdultAccess();
 
@@ -52,53 +98,110 @@ function AdultHub() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 space-y-8">
-      <header className="text-center space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight text-destructive">Mature Hub</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Discover adult-rated manga, manhwa, and erotica in English. Content here is strictly for mature audiences.
+    <div className="container mx-auto px-4 py-12 space-y-12">
+      <header className="text-center space-y-6">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-destructive/10 text-destructive text-xs font-black uppercase tracking-widest border border-destructive/20">
+          <Sparkles className="h-3 w-3" /> Restricted Content
+        </div>
+        <h1 className="text-5xl font-black tracking-tighter text-foreground uppercase italic">Mature <span className="text-destructive">Hub</span></h1>
+        <p className="text-muted-foreground max-w-xl mx-auto text-sm">
+          Discover restricted manga and manhwa. This area is strictly for adults.
         </p>
       </header>
 
-      <div className="flex justify-center gap-2">
-        <button
-          onClick={() => setSource("manga")}
-          className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-            source === "manga" ? "bg-primary text-primary-foreground shadow-lg" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-          }`}
-        >
-          Adult Manga
-        </button>
-        <button
-          onClick={() => setSource("manhwa")}
-          className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-            source === "manhwa" ? "bg-primary text-primary-foreground shadow-lg" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-          }`}
-        >
-          Adult Manhwa
-        </button>
+      {/* Animated Section */}
+      {animated && animated.length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-center gap-2">
+            <PlayCircle className="h-5 w-5 text-destructive" />
+            <h2 className="text-xl font-bold uppercase tracking-tight">Animated Mature Comics</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {animated.map(m => <MangaCard key={m.id} manga={m} />)}
+          </div>
+        </section>
+      )}
+
+      <hr className="border-border/40" />
+
+      {/* Search & Filters */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex bg-secondary/50 p-1 rounded-xl w-full md:w-auto">
+          <button
+            onClick={() => setSource("manga")}
+            className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+              source === "manga" ? "bg-background text-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Manga
+          </button>
+          <button
+            onClick={() => setSource("manhwa")}
+            className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+              source === "manhwa" ? "bg-background text-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Manhwa
+          </button>
+        </div>
+
+        <form onSubmit={handleSearch} className="relative w-full md:max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search within Mature Hub..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 focus:border-destructive transition-all"
+          />
+          {isSearching && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+          )}
+        </form>
       </div>
 
       {error && (
-        <div className="max-w-md mx-auto text-center p-4 rounded-lg bg-destructive/10 text-destructive border border-destructive/20">
-          <p className="font-semibold">Failed to load content</p>
-          <p className="text-sm opacity-80 mt-1">{error}</p>
+        <div className="max-w-md mx-auto text-center p-6 rounded-2xl bg-destructive/5 text-destructive border border-destructive/10">
+          <p className="font-bold uppercase tracking-widest text-xs mb-2">Sync Error</p>
+          <p className="text-sm opacity-80">{error}</p>
         </div>
       )}
 
-      {mangaList === null && !error ? (
-        <div className="flex justify-center py-24">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-24 gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-destructive" />
+          <p className="text-xs font-black uppercase tracking-widest text-muted-foreground animate-pulse">Scanning encrypted vault...</p>
         </div>
-      ) : mangaList?.length === 0 ? (
-        <div className="text-center text-muted-foreground py-12">No mature content found for this category.</div>
-      ) : mangaList ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 animate-fade-in">
-          {mangaList.map((m) => (
-            <MangaCard key={m.id} manga={m} />
-          ))}
+      ) : mangaList.length === 0 ? (
+        <div className="text-center text-muted-foreground py-20 bg-secondary/20 rounded-3xl border border-dashed border-border">
+          <Search className="h-12 w-12 mx-auto mb-4 opacity-20" />
+          <p className="text-sm font-medium">No restricted items found matching your criteria.</p>
         </div>
-      ) : null}
+      ) : (
+        <div className="space-y-12">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 animate-fade-in">
+            {mangaList.map((m) => (
+              <MangaCard key={m.id} manga={m} />
+            ))}
+          </div>
+
+          <div className="flex justify-center pb-12">
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="h-14 px-10 rounded-2xl bg-secondary text-secondary-foreground font-black uppercase tracking-widest text-xs hover:bg-secondary/80 disabled:opacity-50 transition-all shadow-xl shadow-black/5 flex items-center gap-3"
+            >
+              {loadingMore ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Fetching More
+                </>
+              ) : (
+                "Load More Results"
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
