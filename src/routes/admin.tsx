@@ -13,6 +13,7 @@ export const Route = createFileRoute("/admin")({
 type Row = {
   id: string;
   email: string | null;
+  photo_url: string | null;
   country: string | null;
   countryCode: string | null;
   city: string | null;
@@ -23,6 +24,7 @@ type Row = {
   created_at: string | null;
   is_admin: boolean;
   is_root_owner: boolean;
+  is_online: boolean;
 };
 
 function getFlagEmoji(countryCode: string | null) {
@@ -110,9 +112,12 @@ function AdminPage() {
         }
         
         const is_root_owner = val.email === "admin@gmail.com";
+        const is_online = lastSeen ? (new Date().getTime() - new Date(lastSeen).getTime()) < 5 * 60 * 1000 : false;
+        
         return {
           id: d.id,
           email: val.email || null,
+          photo_url: val.photo_url || null,
           country: val.country || null,
           countryCode: val.countryCode || null,
           city: val.city || null,
@@ -122,7 +127,8 @@ function AdminPage() {
           last_seen_at: lastSeen,
           created_at: val.created_at || null,
           is_admin: adminSet.has(d.id) || is_root_owner,
-          is_root_owner
+          is_root_owner,
+          is_online
         };
       });
       
@@ -249,9 +255,16 @@ function AdminPage() {
               {rows.map((r) => (
                 <tr key={r.id} className="border-t border-border hover:bg-muted/20">
                   <td className="p-3 font-medium">
-                    <div className="flex items-center gap-2">
-                      <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] text-primary font-bold">
-                        {r.email ? r.email[0].toUpperCase() : "?"}
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        {r.photo_url ? (
+                          <img src={r.photo_url} alt="" className="h-8 w-8 rounded-full object-cover border border-border" />
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-[10px] text-primary font-bold">
+                            {r.email ? r.email[0].toUpperCase() : "?"}
+                          </div>
+                        )}
+                        <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-[2.5px] border-card ${r.is_online ? 'bg-green-500' : 'bg-muted-foreground/40'}`} title={r.is_online ? 'Online' : 'Offline'} />
                       </div>
                       {r.email ?? "—"}
                     </div>

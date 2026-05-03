@@ -21,38 +21,35 @@ export async function trackSession(uid?: string) {
 
     const device = getDeviceType();
 
-    // 1. Save immediately with Unknown IP to prevent data loss if user logs out fast
-    try {
-      await setDoc(doc(db, "user_sessions", targetUid), {
-        email: user?.email || "Unknown",
-        ip: "Unknown",
-        country: "Unknown",
-        countryCode: "",
-        city: "",
-        region: "",
-        last_device: device,
-        last_seen_at: serverTimestamp(),
-        created_at: user?.metadata?.creationTime || new Date().toISOString()
-      }, { merge: true });
-    } catch (e) {
-      console.warn("Initial session tracking failed", e);
-    }
-
-    // 2. Fetch IP location and update
+    // Fetch IP location first, then save everything at once
+    let ipData = { ip: "Unknown", country: "Unknown", countryCode: "", city: "", region: "" };
     try {
       const res = await fetch("https://ipapi.co/json/");
       if (res.ok) {
         const data = await res.json();
-        await setDoc(doc(db, "user_sessions", targetUid), {
+        ipData = {
           ip: data.ip || "Unknown",
           country: data.country_name || "Unknown",
           countryCode: data.country_code || "",
           city: data.city || "",
           region: data.region || ""
-        }, { merge: true });
+        };
       }
     } catch (e) {
       console.warn("Failed to update location info");
+    }
+
+    try {
+      await setDoc(doc(db, "user_sessions", targetUid), {
+        email: user?.email || "Unknown",
+        photo_url: user?.photoURL || null,
+        last_device: device,
+        last_seen_at: serverTimestamp(),
+        created_at: user?.metadata?.creationTime || new Date().toISOString(),
+        ...ipData
+      }, { merge: true });
+    } catch (e) {
+      console.warn("Session tracking failed", e);
     }
 
   } catch (error) {
