@@ -24,7 +24,6 @@ function MangaDetail() {
       logViewManga(id, m.title, isAdult).catch(() => {});
       
       // Update document head for social sharing
-      document.title = `${m.title} — JARVIS COMICS`;
       const meta = {
         "og:title": m.title,
         "og:description": m.description?.slice(0, 160),
