@@ -273,22 +273,87 @@ export async function getChapters(mangaId: string, _limit = 500, language?: stri
     }
   }
 
-  return Array.from(uniqueMap.values()).sort((a, b) => {
+  let chapters = Array.from(uniqueMap.values()).sort((a, b) => {
     const aNum = parseFloat(a.chapter || "0");
     const bNum = parseFloat(b.chapter || "0");
     return aNum - bNum;
   });
+
+  // Inject manhwaread chapters for Stepmother's Friends (English) as MangaDex is missing them
+  if (mangaId === "e87483f7-3099-4594-a166-d9974b205d9a" && (!language || language === "en")) {
+    try {
+      const res = await fetch("/api/manhwaread?action=chapters&slug=my-stepmother-s-friends");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.chapters) {
+          const existingChaps = new Set(chapters.map(c => c.chapter));
+          const missingChaps = data.chapters.filter((c: any) => !existingChaps.has(c.chapter));
+          chapters = [...chapters, ...missingChaps].sort((a, b) => {
+            const aNum = parseFloat(a.chapter || "0");
+            const bNum = parseFloat(b.chapter || "0");
+            return aNum - bNum;
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load manhwaread fallback", e);
+    }
+  }
+
+  return chapters;
 }
 
 export async function getAvailableLanguages(mangaId: string): Promise<string[]> {
-  const url = `${API}/manga/${mangaId}?includes[]=cover_art`;
-  const res = await fetch(url);
-  if (!res.ok) return [];
-  const json = await res.json();
-  return json.data?.attributes?.availableTranslatedLanguages ?? [];
+  // Fetch all chapter entries (no lang filter) to count chapters per language
+  // This lets us sort languages by how many chapters they have
+  try {
+    const res = await fetch(
+      `${API}/manga/${mangaId}/feed?limit=500&order[chapter]=asc&${ALL_CONTENT_PARAMS}&includes[]=scanlation_group`
+    );
+    if (!res.ok) {
+      // Fallback: just return availableTranslatedLanguages from manga metadata
+      const mRes = await fetch(`${API}/manga/${mangaId}?includes[]=cover_art`);
+      if (!mRes.ok) return [];
+      const mJson = await mRes.json();
+      return mJson.data?.attributes?.availableTranslatedLanguages ?? [];
+    }
+    const json = await res.json();
+    const entries: any[] = json.data ?? [];
+
+    // Count unique chapters per language
+    const langChapterSets: Map<string, Set<string>> = new Map();
+    for (const c of entries) {
+      const lang = c.attributes?.translatedLanguage;
+      const ch = c.attributes?.chapter;
+      if (!lang || !ch) continue;
+      if (!langChapterSets.has(lang)) langChapterSets.set(lang, new Set());
+      langChapterSets.get(lang)!.add(ch);
+    }
+
+    // Sort by chapter count descending so the richest language comes first
+    return Array.from(langChapterSets.entries())
+      .sort((a, b) => b[1].size - a[1].size)
+      .map(([lang]) => lang);
+  } catch {
+    return [];
+  }
 }
 
 export async function getChapterPages(chapterId: string): Promise<{ urls: string[]; chapterId: string }> {
+  // Handle our custom manhwaread proxy chapters
+  if (chapterId.startsWith('manhwaread-')) {
+    const [, slug, chapterNum] = chapterId.match(/manhwaread-(.+)-(\d+)/) || [];
+    if (slug && chapterNum) {
+      const res = await fetch(`/api/manhwaread?action=pages&slug=${slug}&chapter=${chapterNum}`);
+      if (!res.ok) throw new Error("Failed to load manhwaread chapter pages");
+      const json = await res.json();
+      return {
+        chapterId,
+        urls: json.urls,
+      };
+    }
+  }
+
   const res = await fetch(`${API}/at-home/server/${chapterId}`);
   if (!res.ok) throw new Error("Failed to load chapter pages");
   const json = await res.json();
