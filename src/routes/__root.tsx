@@ -300,7 +300,7 @@ function RootComponent() {
       </main>
       {location.pathname !== "/auth" && (
         <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-          POWERED BY JARVIS
+          POWERED BY JARVIS [v2.0.debug-hardcoded]
         </footer>
       )}
     </div>
