@@ -24,14 +24,12 @@ export default defineConfig({
         }
       },
       '/api/anime': {
-        target: 'https://api.consumet.org/anime',
+        target: 'https://jarvis-comics.vercel.app',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/anime/, ''),
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq) => {
-            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 JarvisComics/1.0');
-          });
-        }
+      },
+      '/api/manhwaread': {
+        target: 'https://jarvis-comics.vercel.app',
+        changeOrigin: true,
       },
       '/api/covers': {
         target: 'https://uploads.mangadex.org/covers',

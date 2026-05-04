@@ -10,7 +10,8 @@ export default async function handler(req, res) {
 
   try {
     if (action === 'chapters') {
-      const url = `https://manhwaread.com/manhwa/${slug}/`;
+      const targetUrl = `https://manhwaread.com/manhwa/${slug}/`;
+      const url = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`;
       const response = await fetch(url, {
         headers: { 'User-Agent': 'Mozilla/5.0' }
       });
@@ -41,7 +42,8 @@ export default async function handler(req, res) {
       if (!chapter) return res.status(400).json({ error: 'Missing chapter number' });
       
       const paddedNum = String(chapter).padStart(3, '0');
-      const url = `https://manhwaread.com/manhwa/${slug}/chapter-${paddedNum}/`;
+      const targetUrl = `https://manhwaread.com/manhwa/${slug}/chapter-${paddedNum}/`;
+      const url = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`;
       const response = await fetch(url, {
         headers: { 'User-Agent': 'Mozilla/5.0' }
       });
