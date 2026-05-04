@@ -24,7 +24,7 @@ export interface AniListAnime {
 const TRENDING_QUERY = `
 query ($page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
-    media(type: ANIME, isAdult: true, sort: TRENDING_DESC) {
+    media(type: ANIME, isAdult: true, sort: POPULARITY_DESC) {
       id
       title {
         romaji
