@@ -3,9 +3,10 @@ export default async function handler(req, res) {
   const path = req.url.split('/api/anime')[1];
 
   // Handle Jikan API requests via proxy
-  if (path.startsWith('/jikan')) {
+  if (path && path.startsWith('/jikan')) {
     try {
-      const target = `https://api.jikan.moe/v4${path.replace('/jikan', '')}${url.search}`;
+      const target = `https://api.jikan.moe/v4${path.replace('/jikan', '')}`;
+      console.log(`[Jikan Proxy] Fetching: ${target}`);
       const jRes = await fetch(target);
       const jData = await jRes.json();
       return res.status(jRes.status).json(jData);
