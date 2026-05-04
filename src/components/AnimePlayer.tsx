@@ -43,7 +43,7 @@ export function AnimePlayer({ url, onEnded, title }: Props) {
       if (!videoRef.current || !url) return;
       const video = videoRef.current;
 
-      if (window.Hls.isSupported() && url.endsWith(".m3u8")) {
+      if (window.Hls && window.Hls.isSupported() && url.endsWith(".m3u8")) {
         const hls = new window.Hls();
         hls.loadSource(url);
         hls.attachMedia(video);

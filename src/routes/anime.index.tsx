@@ -6,7 +6,7 @@ import { AnimeCard } from "@/components/AnimeCard";
 import { useAdultAccess } from "@/hooks/use-adult-access";
 import { Loader2, Flame, History, Play, ShieldAlert, Sparkles } from "lucide-react";
 
-export const Route = createFileRoute("/anime")({
+export const Route = createFileRoute("/anime/")({
   component: AnimePage,
 });
 

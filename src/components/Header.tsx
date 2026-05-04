@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Search, Menu, X, Home, Compass, BookOpen, Loader2, SlidersHorizontal, SearchX, LogOut, ShieldCheck, Flame, Zap, Sparkles } from "lucide-react";
+import { Search, Menu, X, Home, Compass, BookOpen, Loader2, SlidersHorizontal, SearchX, LogOut, ShieldCheck, Flame, Zap, Sparkles, Play } from "lucide-react";
 import jarvisLogo from "@/assets/jarvis-comics-logo.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { searchManga, type Manga } from "@/lib/mangadex";
