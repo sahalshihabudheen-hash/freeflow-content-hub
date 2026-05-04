@@ -13,30 +13,10 @@ export interface Anime {
 }
 
 export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
-  try {
-    const res = await fetch(`https://api.jikan.moe/v4/anime?genres=12&order_by=popularity&sort=desc&page=${page}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.data?.length > 0) {
-        return data.data.map((a: any) => ({
-          id: a.mal_id.toString(),
-          title: a.title,
-          image: a.images.jpg.large_image_url,
-          type: a.type,
-          releaseDate: a.status,
-          totalEpisodes: a.episodes
-        }));
-      }
-    }
-  } catch (e) {
-    console.error("Jikan failed, trying AniList fallback...", e);
-  }
-
-  // Fallback to AniList
   const query = `
     query ($page: Int) {
-      Page(page: $page, perPage: 20) {
-        media(type: ANIME, isAdult: true, sort: POPULARITY_DESC) {
+      Page(page: $page, perPage: 24) {
+        media(type: ANIME, isAdult: true) {
           id
           title { romaji english }
           coverImage { large }
@@ -48,9 +28,9 @@ export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
     }
   `;
   try {
-    const res = await fetch("https://graphql.anilist.co", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const res = await fetch(`${API}/anilist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, variables: { page } })
     });
     const data = await res.json();
@@ -63,33 +43,15 @@ export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
       totalEpisodes: a.episodes
     }));
   } catch (e) {
-    console.error("AniList fallback failed too.", e);
+    console.error("AniList fetch failed", e);
     return [];
   }
 }
 
-export async function searchJikan(query: string, page = 1): Promise<Anime[]> {
-  // Similar fallback logic for search
-  try {
-    const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&genres=12&page=${page}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.data?.length > 0) {
-        return data.data.map((a: any) => ({
-          id: a.mal_id.toString(),
-          title: a.title,
-          image: a.images.jpg.large_image_url,
-          type: a.type,
-          releaseDate: a.status,
-          totalEpisodes: a.episodes
-        }));
-      }
-    }
-  } catch (e) {}
-
-  const aniQuery = `
+export async function searchJikan(queryStr: string, page = 1): Promise<Anime[]> {
+  const query = `
     query ($search: String, $page: Int) {
-      Page(page: $page, perPage: 20) {
+      Page(page: $page, perPage: 24) {
         media(search: $search, type: ANIME, isAdult: true) {
           id
           title { romaji english }
@@ -102,10 +64,10 @@ export async function searchJikan(query: string, page = 1): Promise<Anime[]> {
     }
   `;
   try {
-    const res = await fetch("https://graphql.anilist.co", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: aniQuery, variables: { search: query, page } })
+    const res = await fetch(`${API}/anilist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, variables: { search: queryStr, page } })
     });
     const data = await res.json();
     return data.data.Page.media.map((a: any) => ({
@@ -117,6 +79,7 @@ export async function searchJikan(query: string, page = 1): Promise<Anime[]> {
       totalEpisodes: a.episodes
     }));
   } catch (e) {
+    console.error("AniList search failed", e);
     return [];
   }
 }
@@ -139,30 +102,48 @@ export type StreamingLink = {
 };
 
 export async function getAnimeInfo(id: string): Promise<AnimeDetails> {
-  const res = await fetch(`https://api.jikan.moe/v4/anime/${id}/full`);
+  const query = `
+    query ($id: Int) {
+      Media(id: $id) {
+        id
+        title { romaji english }
+        coverImage { large }
+        description
+        genres
+        status
+        format
+        episodes
+      }
+    }
+  `;
+  const res = await fetch(`${API}/anilist`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, variables: { id: parseInt(id) } })
+  });
   if (!res.ok) throw new Error("Anime details not found");
   const data = await res.json();
-  const a = data.data;
+  const a = data.data.Media;
   
-  // For streaming, we need to find the Consumet ID.
-  // We'll search by title on Consumet.
-  const searchRes = await fetch(`${API}/hentaihaven/${encodeURIComponent(a.title)}`);
+  // For streaming, we'll search by title on Consumet.
+  const searchRes = await fetch(`${API}/hentaihaven/${encodeURIComponent(a.title.english || a.title.romaji)}`);
   const searchData = await searchRes.json();
-  const consumetId = searchData.results?.[0]?.id || a.title.toLowerCase().replace(/ /g, '-');
+  const consumetId = searchData.results?.[0]?.id || (a.title.english || a.title.romaji).toLowerCase().replace(/ /g, '-');
 
   return {
-    id: a.mal_id.toString(),
-    title: a.title,
-    image: a.images.jpg.large_image_url,
-    description: a.synopsis,
-    genres: a.genres.map((g: any) => g.name),
+    id: a.id.toString(),
+    title: a.title.english || a.title.romaji,
+    image: a.coverImage.large,
+    description: a.description,
+    genres: a.genres,
     status: a.status,
-    releaseDate: a.aired.string,
-    type: a.type,
+    releaseDate: a.status,
+    type: a.format,
     episodes: Array.from({ length: a.episodes || 1 }).map((_, i) => ({
       id: `${consumetId}-episode-${i + 1}`,
       number: i + 1,
-      title: `Episode ${i + 1}`
+      title: `Episode ${i + 1}`,
+      url: "" // Not used directly
     }))
   };
 }

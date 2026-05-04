@@ -2,15 +2,21 @@ export default async function handler(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const path = req.url.split('/api/anime')[1];
 
-  // Handle Jikan API requests via proxy
-  if (path && path.startsWith('/jikan')) {
+  // Handle AniList GraphQL requests via proxy
+  if (path === '/anilist' || path === 'anilist') {
     try {
-      const target = `https://api.jikan.moe/v4${path.replace('/jikan', '')}`;
-      console.log(`[Jikan Proxy] Fetching: ${target}`);
-      const jRes = await fetch(target);
-      const jData = await jRes.json();
-      return res.status(jRes.status).json(jData);
+      // If req.body is a string, parse it, otherwise use it
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      
+      const aniRes = await fetch('https://graphql.anilist.co', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const aniData = await aniRes.json();
+      return res.status(aniRes.status).json(aniData);
     } catch (e) {
+      console.error("[AniList Proxy Error]", e.message);
       return res.status(500).json({ error: e.message });
     }
   }
