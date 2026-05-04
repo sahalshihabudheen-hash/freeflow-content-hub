@@ -14,7 +14,16 @@ export const Route = createFileRoute("/adult")({
 function AdultHub() {
   const [source, setSource] = useState<"manga" | "manhwa" | "anime">("manga");
   const [mangaList, setMangaList] = useState<Manga[]>([]);
-  const [animeList, setAnimeList] = useState<Anime[]>([]);
+  const [animeList, setAnimeList] = useState<Anime[]>([
+    {
+      id: "hardcoded-test",
+      title: "!!! IF YOU SEE THIS, REACT RENDERING IS WORKING !!!",
+      image: "https://via.placeholder.com/400x600?text=REACT+OK",
+      type: "TEST",
+      releaseDate: "NOW",
+      totalEpisodes: 1
+    }
+  ]);
   const [animated, setAnimated] = useState<Manga[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -33,7 +42,7 @@ function AdultHub() {
       if (isInitial) {
         setLoading(true);
         setMangaList([]);
-        setAnimeList([]);
+        // setAnimeList([]);
         setError(null);
       } else {
         setLoadingMore(true);
