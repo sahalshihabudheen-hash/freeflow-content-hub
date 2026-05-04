@@ -52,7 +52,15 @@ function AdultHub() {
         }
         
         console.log(`[AdultHub] Found ${results.length} anime results`);
-        setAnimeList(prev => isInitial ? results : [...prev, ...results]);
+        const testItem: Anime = {
+          id: "test-item",
+          title: "!!! SYSTEM CHECK: IF YOU SEE THIS, GRID IS WORKING !!!",
+          image: "https://via.placeholder.com/400x600?text=SYSTEM+CHECK+OK",
+          type: "TEST",
+          releaseDate: "LIVE",
+          totalEpisodes: 99
+        };
+        setAnimeList(prev => isInitial ? [testItem, ...results] : [...prev, ...results]);
       } else {
         let results: Manga[] = [];
         if (query.trim()) {
