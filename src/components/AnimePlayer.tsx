@@ -43,15 +43,35 @@ export function AnimePlayer({ url, onEnded, title }: Props) {
       if (!videoRef.current || !url) return;
       const video = videoRef.current;
 
-      if (window.Hls && window.Hls.isSupported() && url.endsWith(".m3u8")) {
-        const hls = new window.Hls();
+      if (window.Hls && window.Hls.isSupported() && url.includes(".m3u8")) {
+        const hls = new window.Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          backBufferLength: 90
+        });
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
-          // video.play().catch(() => {});
+          video.play().catch(() => {});
+        });
+        hls.on(window.Hls.Events.ERROR, (_event: any, data: any) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case window.Hls.ErrorTypes.NETWORK_ERROR:
+                hls.startLoad();
+                break;
+              case window.Hls.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                break;
+            }
+          }
         });
       } else {
         video.src = url;
+        video.play().catch(() => {});
       }
     }
 

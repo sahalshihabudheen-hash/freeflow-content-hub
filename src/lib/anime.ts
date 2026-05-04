@@ -157,27 +157,48 @@ export async function getAnimeInfo(id: string): Promise<AnimeDetails> {
 }
 
 export async function getEpisodeSources(episodeId: string): Promise<StreamingLink[]> {
-  // Check if it's a Hanime slug
+  console.log(`[Streaming] Resolving sources for: ${episodeId}`);
+  
+  // 1. Try Hanime if applicable
   if (episodeId.includes('-ep-')) {
     const slug = episodeId.split('-ep-')[0];
     const epNum = episodeId.split('-ep-')[1];
-    
-    // Hanime usually has slugs like "pure-mail-1", "pure-mail-2"
-    // We try the slug directly if it has a number, or append epNum
     const targetSlug = slug.match(/-\d+$/) ? slug : `${slug}-${epNum}`;
     
     try {
+      console.log(`[Streaming] Trying Hanime: ${targetSlug}`);
       const res = await fetch(`${API}/hanime/video/${targetSlug}`);
       if (res.ok) {
         const data = await res.json();
-        return data.sources || [];
+        if (data.sources?.length > 0) return data.sources;
       }
     } catch (e) {}
   }
 
-  // Fallback to Consumet/HentaiHaven
-  const res = await fetch(`${API}/hentaihaven/watch/${episodeId}`);
-  if (!res.ok) throw new Error("Failed to load episode sources");
-  const data = await res.json();
-  return data.sources || [];
+  // 2. Try HentaiHaven (slug based)
+  const hhSlug = episodeId.split('-ep-')[0].replace(/-ep$/, '');
+  const hhEpNum = episodeId.split('-ep-')[1] || "1";
+  
+  try {
+    const target = `${API}/anime/hentaihaven/watch/${hhSlug}-episode-${hhEpNum}`;
+    console.log(`[Streaming] Trying HentaiHaven: ${target}`);
+    const res = await fetch(target);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.sources?.length > 0) return data.sources;
+    }
+  } catch (e) {}
+
+  // 3. Last Resort: Try GogoAnime (common for older titles)
+  try {
+    const target = `${API}/anime/gogoanime/watch/${hhSlug}-episode-${hhEpNum}`;
+    console.log(`[Streaming] Trying GogoAnime: ${target}`);
+    const res = await fetch(target);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.sources?.length > 0) return data.sources;
+    }
+  } catch (e) {}
+
+  throw new Error("No available streaming sources found for this title.");
 }

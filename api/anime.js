@@ -57,31 +57,27 @@ export default async function handler(req, res) {
         headers: { 'User-Agent': 'Mozilla/5.0' }
       });
       const hData = await hRes.json();
-      
-      // Map Hanime format to Consumet-like format for compatibility
       const streams = hData.videos_manifest.servers[0].streams.map(s => ({
         url: s.url,
         quality: s.height + 'p',
         isM3U8: s.url.includes('.m3u8')
       }));
-      
       return res.status(200).json({ sources: streams });
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
   }
 
-  // 4. Mirror Proxy (Fallback)
+  // 4. Multi-Mirror Consumet Proxy (Search/Watch)
   const mirrors = [
     'https://api-consumet-org-ashy.vercel.app',
     'https://consumet-api.ryuk-me.dev',
     'https://api.consumet.org'
   ];
 
-  const targetPath = path;
   for (const mirror of mirrors) {
     try {
-      const target = `${mirror}${targetPath}${url.search}`;
+      const target = `${mirror}${path}${url.search}`;
       const mRes = await fetch(target, { signal: AbortSignal.timeout(5000) });
       if (mRes.ok) {
         const mData = await mRes.json();
