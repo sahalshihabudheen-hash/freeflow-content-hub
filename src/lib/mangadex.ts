@@ -210,14 +210,30 @@ export async function getManga(id: string): Promise<Manga> {
   return mapManga(json.data);
 }
 
-export async function getChapters(mangaId: string, limit = 500, language?: string): Promise<Chapter[]> {
+export async function getChapters(mangaId: string, _limit = 500, language?: string): Promise<Chapter[]> {
   const langParam = language ? `&translatedLanguage[]=${language}` : "";
-  const url = `${API}/manga/${mangaId}/feed?limit=${limit}${langParam}&order[chapter]=asc&${ALL_CONTENT_PARAMS}&includes[]=scanlation_group`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to load chapters");
-  const json = await res.json();
-  
-  const rawChapters = json.data.map((c: any) => {
+  const PAGE_SIZE = 500; // MangaDex max per request
+  let offset = 0;
+  let allRaw: any[] = [];
+
+  // Paginate until we have all chapters
+  while (true) {
+    const url = `${API}/manga/${mangaId}/feed?limit=${PAGE_SIZE}&offset=${offset}${langParam}&order[chapter]=asc&${ALL_CONTENT_PARAMS}&includes[]=scanlation_group`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Failed to load chapters");
+    const json = await res.json();
+    const batch: any[] = json.data ?? [];
+    allRaw = allRaw.concat(batch);
+
+    // If we got fewer results than PAGE_SIZE, we've reached the end
+    if (batch.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+
+    // Safety: don't loop more than 10 pages (5000 chapters)
+    if (offset >= 5000) break;
+  }
+
+  const rawChapters = allRaw.map((c: any) => {
     const a = c.attributes;
     const sg = c.relationships?.find((r: any) => r.type === "scanlation_group");
     return {
@@ -232,16 +248,27 @@ export async function getChapters(mangaId: string, limit = 500, language?: strin
     };
   });
 
-  // Filter out empty chapters unless they are external
-  const filtered = rawChapters.filter((c: any) => c.pages > 0 || c.externalUrl);
+  // Only drop chapters that have 0 pages AND no externalUrl AND no chapter number
+  // (i.e. truly empty entries). Keep chapters with 0 pages if they have a chapter number —
+  // MangaDex sometimes doesn't store page counts for all entries.
+  const filtered = rawChapters.filter((c: any) => {
+    if (c.externalUrl) return true;        // always keep external chapters
+    if (c.pages > 0) return true;           // has pages, definitely valid
+    if (c.chapter != null) return true;     // has a chapter number, keep it
+    return false;                           // truly empty, drop it
+  });
 
-  // Deduplicate by chapter number per language
-  // If multiple groups exist for the same chapter, we pick the one with most pages
+  // Deduplicate: for same chapter+language, prefer entry with most pages.
+  // If pages are equal, prefer the one with an externalUrl (can always be opened).
   const uniqueMap = new Map<string, any>();
   for (const c of filtered) {
     const key = `${c.chapter}-${c.language}`;
     const existing = uniqueMap.get(key);
-    if (!existing || (c.pages > existing.pages)) {
+    if (!existing) {
+      uniqueMap.set(key, c);
+    } else if (c.pages > existing.pages) {
+      uniqueMap.set(key, c);
+    } else if (c.pages === existing.pages && c.externalUrl && !existing.externalUrl) {
       uniqueMap.set(key, c);
     }
   }

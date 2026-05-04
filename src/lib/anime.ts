@@ -153,12 +153,22 @@ export async function getAnimeInfo(id: string): Promise<AnimeDetails> {
 
   // Fallback if no episodes found
   if (episodes.length === 0) {
-    episodes = Array.from({ length: a.episodes || 1 }).map((_, i) => ({
-      id: `fallback|hanime|${i + 1}|${encodeURIComponent(a.title.english || a.title.romaji)}`,
-      number: i + 1,
-      title: `Episode ${i + 1}`,
-      url: ""
-    }));
+    const title = a.title.english || a.title.romaji;
+    // We add both hanime and hentaicity as fallback options
+    episodes = [
+      {
+        id: `fallback|hanime|1|${encodeURIComponent(title)}`,
+        number: 1,
+        title: `Watch on Hanime`,
+        url: ""
+      },
+      {
+        id: `fallback|hentaicity|1|${encodeURIComponent(title)}`,
+        number: 1,
+        title: `Watch on HentaiCity`,
+        url: ""
+      }
+    ];
   }
 
   return {
@@ -178,30 +188,60 @@ export async function getEpisodeSources(episodeId: string): Promise<StreamingLin
   const [anilistId, providerId, episodeNumber, watchId] = episodeId.split('|');
   
   if (anilistId === 'fallback') {
-    // Search Hanime by title (last resort)
-    try {
-      const searchRes = await fetch(`${API}/hanime/search/${watchId}`);
-      const searchData = await searchRes.json();
-      const slug = searchData.results?.[0]?.slug;
-      if (slug) {
-        const targetSlug = slug.match(/-\d+$/) ? slug : `${slug}-${episodeNumber}`;
-        const res = await fetch(`${API}/hanime/video/${targetSlug}`);
-        const data = await res.json();
-        return data.sources || [];
-      }
-    } catch (e) {}
+    if (providerId === 'hanime') {
+      try {
+        const searchRes = await fetch(`${API}/hanime/search/${watchId}`);
+        const searchData = await searchRes.json();
+        const slug = searchData.results?.[0]?.slug;
+        if (slug) {
+          const targetSlug = slug.match(/-\d+$/) ? slug : `${slug}-${episodeNumber}`;
+          const res = await fetch(`${API}/hanime/video/${targetSlug}`);
+          const data = await res.json();
+          return data.sources || [];
+        }
+      } catch (e) {}
+    } else if (providerId === 'hentaicity') {
+      try {
+        const searchRes = await fetch(`${API}/hentaicity/search/${watchId}`);
+        const searchData = await searchRes.json();
+        const videoUrl = searchData.results?.[0]?.url;
+        if (videoUrl) {
+          const res = await fetch(`${API}/hentaicity/video/${encodeURIComponent(videoUrl)}`);
+          const data = await res.json();
+          return data.sources || [];
+        }
+      } catch (e) {}
+    }
   } else {
     // Use Anify Sources API
     try {
+      // Add a controller to timeout the fetch
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
       const url = `${API}/anify/sources?id=${anilistId}&episodeNumber=${episodeNumber}&providerId=${providerId}&watchId=${watchId}&subType=sub`;
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
       const data = await res.json();
       return data.sources?.map((s: any) => ({
         url: s.url,
         quality: s.quality || 'auto',
         isM3U8: s.url.includes('.m3u8')
       })) || [];
-    } catch (e) {}
+    } catch (e) {
+      // If Anify fails, try Hanime fallback automatically
+      const info = await getAnimeInfo(anilistId);
+      const title = info.title;
+      const searchRes = await fetch(`${API}/hanime/search/${encodeURIComponent(title)}`);
+      const searchData = await searchRes.json();
+      const slug = searchData.results?.[0]?.slug;
+      if (slug) {
+        const res = await fetch(`${API}/hanime/video/${slug}`);
+        const data = await res.json();
+        return data.sources || [];
+      }
+    }
   }
 
   throw new Error("No available streaming sources found.");

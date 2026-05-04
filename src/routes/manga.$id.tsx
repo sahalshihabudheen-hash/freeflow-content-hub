@@ -55,7 +55,7 @@ function MangaDetail() {
   useEffect(() => {
     if (!langInitialized) return;
     setChapters(null);
-    getChapters(id, 200, selectedLang).then(setChapters).catch(() => setChapters([]));
+    getChapters(id, undefined, selectedLang).then(setChapters).catch(() => setChapters([]));
   }, [id, selectedLang, langInitialized]);
 
   const handleShare = async () => {

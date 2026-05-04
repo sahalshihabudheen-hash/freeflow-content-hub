@@ -32,11 +32,11 @@ export default async function handler(req, res) {
   if (path && path.startsWith('/anify')) {
     const target = path.replace('/anify', 'https://api.anify.tv') + url.search;
     try {
-      const aRes = await fetch(target, { signal: AbortSignal.timeout(8000) });
+      const aRes = await fetch(target, { signal: AbortSignal.timeout(3000) });
       const aData = await aRes.json();
       return res.status(aRes.status).json(aData);
     } catch (e) {
-      return res.status(500).json({ error: e.message });
+      return res.status(504).json({ error: 'Anify timeout/failure' });
     }
   }
 
@@ -74,6 +74,47 @@ export default async function handler(req, res) {
         isM3U8: true
       }));
       return res.status(200).json({ sources: streams });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // 4. HentaiCity Proxy
+  if (path && path.startsWith('/hentaicity/search')) {
+    const query = path.split('/hentaicity/search/')[1];
+    try {
+      const hcRes = await fetch(`https://hentaicity.com/?s=${query}`, {
+        headers: { 'User-Agent': 'Mozilla/5.0' }
+      });
+      const html = await hcRes.text();
+      // Extract results using regex (simple but effective for this site)
+      const results = [];
+      const regex = /<div class="thumb"><a href="([^"]+)" title="([^"]+)"><img src="([^"]+)"/g;
+      let m;
+      while ((m = regex.exec(html)) !== null) {
+        results.push({ url: m[1], title: m[2], image: m[3] });
+      }
+      return res.status(200).json({ results });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  if (path && path.startsWith('/hentaicity/video')) {
+    const videoUrl = decodeURIComponent(path.split('/hentaicity/video/')[1]);
+    try {
+      const hcRes = await fetch(videoUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0' }
+      });
+      const html = await hcRes.text();
+      // Look for sources in the HTML
+      const sourceMatch = html.match(/source src="([^"]+)" type="video\/mp4"/);
+      if (sourceMatch) {
+        return res.status(200).json({ 
+          sources: [{ url: sourceMatch[1], quality: '720p', isM3U8: false }] 
+        });
+      }
+      return res.status(404).json({ error: 'No video source found on page' });
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
