@@ -1,5 +1,5 @@
 
-const ANILIST_URL = "https://graphql.anilist.co";
+const ANILIST_URL = "/api/anime/anilist";
 
 export interface AniListAnime {
   id: number;
