@@ -90,7 +90,7 @@ export async function searchJikan(queryStr: string, page = 1): Promise<Anime[]> 
       body: JSON.stringify({ query, variables: { search: queryStr, page } })
     });
     const data = await res.json();
-    return data.data.Page.media.map((a: any) => ({
+    const results = data.data.Page.media.map((a: any) => ({
       id: a.id.toString(),
       title: a.title.english || a.title.romaji,
       image: a.coverImage.large,
@@ -98,9 +98,28 @@ export async function searchJikan(queryStr: string, page = 1): Promise<Anime[]> 
       releaseDate: a.status,
       totalEpisodes: a.episodes
     }));
-  } catch (e) {
+
+    if (results.length === 0) {
+      return [{
+        id: "debug-search-empty",
+        title: "Search returned 0 results",
+        image: "https://via.placeholder.com/400x600?text=Search+Empty",
+        type: "DEBUG",
+        releaseDate: "NOW",
+        totalEpisodes: 0
+      }];
+    }
+    return results;
+  } catch (e: any) {
     console.error("AniList search failed", e);
-    return [];
+    return [{
+      id: "error-search",
+      title: "Search Error: " + e.message,
+      image: "https://via.placeholder.com/400x600?text=Search+Error",
+      type: "ERROR",
+      releaseDate: "ERROR",
+      totalEpisodes: 0
+    }];
   }
 }
 
