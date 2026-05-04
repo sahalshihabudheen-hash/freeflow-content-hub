@@ -4,6 +4,51 @@ This document outlines the next set of premium features to be implemented for **
 
 ---
 
+## 🚨 PRIORITY FIX 1 — Anime / Hentai Streaming
+The adult anime section loads but **never plays video**.
+(See full diagnosis below)
+
+## 🚨 PRIORITY FIX 2 — Missing Chapters (Stepmother's Friends)
+The fallback to `manhwaread.com` was deployed but the chapters (79-147) are still not showing in the UI. 
+*Things to check tomorrow:*
+- Does `getChapters` run on the server (SSR) where `fetch("/api/manhwaread...")` fails due to a missing absolute URL?
+- Is there a CORS error blocking the client from calling our new `/api/manhwaread` endpoint?
+- Check the Vercel deployment logs for any 500 errors on the new API route.
+
+---
+
+The adult anime section loads but **never plays video**. Here's the full diagnosis:
+
+### Root Cause
+All Consumet API mirrors are dead (451 / timeout / connection refused):
+- `api.consumet.org` → ❌ 451 (geo-blocked)
+- `consumet-api.ryuk-me.dev` → ❌ fetch failed
+- `api-consumet-org-ashy.vercel.app` → ❌ timeout
+- `c.delusionz.xyz` → ❌ fetch failed
+- `api.anify.tv` → ❌ timeout (consistently)
+
+**Hanime** (`search.htv-services.com`) is ✅ working and returns results.
+**HentaiCity** (`hentaicity.com`) is ✅ reachable but uses an **iframe-based player** — no direct `<source>` tag in the HTML. Video URLs are loaded dynamically by JavaScript.
+
+### Plan for Tomorrow
+
+#### Option A — Hanime-first approach (Recommended)
+1. When user clicks an anime, **immediately search Hanime** by title instead of waiting for Anify.
+2. Show the Hanime results directly as episode cards (they have real slugs & HLS streams).
+3. Use `/api/anime/hanime/video/:slug` to get the `.m3u8` stream → pass to `AnimePlayer`.
+
+#### Option B — HentaiCity iframe embed
+1. Instead of scraping the video source (it's behind JS), **embed the HentaiCity page in an iframe** directly in the player area.
+2. Search for the video URL via `/api/anime/hentaicity/search/:title`, get back the page URL, and embed it.
+3. Simpler but less control over playback UI.
+
+#### Files to change
+- `api/anime.js` — add a `/hanime/list` endpoint that searches by title and returns full episode slugs
+- `src/lib/anime.ts` — `getAnimeInfo()` should do a parallel Hanime search immediately, not just as a fallback
+- `src/routes/adult.tsx` — wire up direct Hanime episode links on the adult page
+
+---
+
 ### 1. 📱 PWA & Offline Reading
 Transform the web app into a high-performance **Progressive Web App**.
 - **Installable**: Add a "Add to Home Screen" prompt for mobile users.

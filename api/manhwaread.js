@@ -1,5 +1,8 @@
 export default async function handler(req, res) {
-  const { action, slug, chapter } = req.query;
+  const url = new URL(req.url, 'http://localhost');
+  const action = url.searchParams.get('action');
+  const slug = url.searchParams.get('slug');
+  const chapter = url.searchParams.get('chapter');
 
   if (!action || !slug) {
     return res.status(400).json({ error: 'Missing action or slug' });

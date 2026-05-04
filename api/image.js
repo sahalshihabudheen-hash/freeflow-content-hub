@@ -1,5 +1,6 @@
 export default async function handler(req, res) {
-  const { url } = req.query;
+  const reqUrl = new URL(req.url, 'http://localhost');
+  const url = reqUrl.searchParams.get('url');
   if (!url) return res.status(400).send('Missing url');
 
   try {

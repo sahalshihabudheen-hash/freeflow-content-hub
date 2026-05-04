@@ -130,45 +130,66 @@ export async function getAnimeInfo(id: string): Promise<AnimeDetails> {
   const data = await res.json();
   const a = data.data.Media;
   
-  // Try to get episodes from Anify using the same ID
+  const title = a.title.english || a.title.romaji;
   let episodes: Episode[] = [];
+  
+  // Hanime-first approach (Recommended)
   try {
-    const anifyRes = await fetch(`${API}/anify/info/${id}?type=anime`);
-    const anifyData = await anifyRes.json();
-    
-    // Find a provider with episodes (prefer hentaihaven or hanime)
-    const provider = anifyData.episodes?.find((p: any) => p.providerId === 'hentaihaven' || p.providerId === 'hanime') || anifyData.episodes?.[0];
-    
-    if (provider && provider.episodes?.length > 0) {
-      episodes = provider.episodes.map((ep: any) => ({
-        id: `${id}|${provider.providerId}|${ep.number}|${encodeURIComponent(ep.id)}`,
-        number: ep.number,
-        title: ep.title || `Episode ${ep.number}`,
-        url: ep.id
+    const hanimeRes = await fetch(`${API}/hanime/search/${encodeURIComponent(title)}`);
+    const hanimeData = await hanimeRes.json();
+    if (hanimeData.results && hanimeData.results.length > 0) {
+      // Reverse to get episode 1 first if they are sorted newest first
+      const hits = hanimeData.results.slice().reverse();
+      episodes = hits.map((hit: any, i: number) => ({
+        id: `fallback|hanime_direct|${i + 1}|${hit.slug}`,
+        number: i + 1,
+        title: hit.name,
+        url: hit.slug
       }));
     }
   } catch (e) {
-    console.warn("[getAnimeInfo] Anify fetch failed, using manual episode generation", e);
+    console.warn("[getAnimeInfo] Hanime search failed", e);
   }
 
-  // Fallback if no episodes found
+  // Try to get episodes from Anify using the same ID if Hanime failed
   if (episodes.length === 0) {
-    const title = a.title.english || a.title.romaji;
-    // We add both hanime and hentaicity as fallback options
-    episodes = [
-      {
-        id: `fallback|hanime|1|${encodeURIComponent(title)}`,
-        number: 1,
-        title: `Watch on Hanime`,
-        url: ""
-      },
-      {
-        id: `fallback|hentaicity|1|${encodeURIComponent(title)}`,
-        number: 1,
-        title: `Watch on HentaiCity`,
-        url: ""
+    try {
+      const anifyRes = await fetch(`${API}/anify/info/${id}?type=anime`);
+      const anifyData = await anifyRes.json();
+      
+      // Find a provider with episodes (prefer hentaihaven or hanime)
+      const provider = anifyData.episodes?.find((p: any) => p.providerId === 'hentaihaven' || p.providerId === 'hanime') || anifyData.episodes?.[0];
+      
+      if (provider && provider.episodes?.length > 0) {
+        episodes = provider.episodes.map((ep: any) => ({
+          id: `${id}|${provider.providerId}|${ep.number}|${encodeURIComponent(ep.id)}`,
+          number: ep.number,
+          title: ep.title || `Episode ${ep.number}`,
+          url: ep.id
+        }));
       }
-    ];
+    } catch (e) {
+      console.warn("[getAnimeInfo] Anify fetch failed, using manual episode generation", e);
+    }
+
+    // Fallback if no episodes found
+    if (episodes.length === 0) {
+      // We add both hanime and hentaicity as fallback options
+      episodes = [
+        {
+          id: `fallback|hanime|1|${encodeURIComponent(title)}`,
+          number: 1,
+          title: `Watch on Hanime`,
+          url: ""
+        },
+        {
+          id: `fallback|hentaicity|1|${encodeURIComponent(title)}`,
+          number: 1,
+          title: `Watch on HentaiCity`,
+          url: ""
+        }
+      ];
+    }
   }
 
   return {
@@ -188,7 +209,13 @@ export async function getEpisodeSources(episodeId: string): Promise<StreamingLin
   const [anilistId, providerId, episodeNumber, watchId] = episodeId.split('|');
   
   if (anilistId === 'fallback') {
-    if (providerId === 'hanime') {
+    if (providerId === 'hanime_direct') {
+      try {
+        const res = await fetch(`${API}/hanime/video/${watchId}`);
+        const data = await res.json();
+        return data.sources || [];
+      } catch (e) {}
+    } else if (providerId === 'hanime') {
       try {
         const searchRes = await fetch(`${API}/hanime/search/${watchId}`);
         const searchData = await searchRes.json();
