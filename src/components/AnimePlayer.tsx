@@ -242,6 +242,9 @@ export function AnimePlayer({ url, onEnded, title }: Props) {
           </div>
 
           <div className="flex items-center gap-4">
+            <div className="text-[8px] text-white/20 truncate max-w-[100px] hover:max-w-none transition-all">
+              URL: {url}
+            </div>
             <button className="text-white hover:text-primary transition-colors">
               <Settings size={20} />
             </button>

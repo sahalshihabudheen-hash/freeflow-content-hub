@@ -28,7 +28,19 @@ export default async function handler(req, res) {
     }
   }
 
-  // 2. Hanime Search
+  // 2. Anify Proxy (High Reliability)
+  if (path && path.startsWith('/anify')) {
+    const target = path.replace('/anify', 'https://api.anify.tv') + url.search;
+    try {
+      const aRes = await fetch(target, { signal: AbortSignal.timeout(8000) });
+      const aData = await aRes.json();
+      return res.status(aRes.status).json(aData);
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // 3. Hanime Proxy
   if (path && path.startsWith('/hanime/search')) {
     const query = path.split('/hanime/search/')[1];
     try {
@@ -49,7 +61,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // 3. Hanime Video
   if (path && path.startsWith('/hanime/video')) {
     const slug = path.split('/hanime/video/')[1];
     try {
@@ -60,7 +71,7 @@ export default async function handler(req, res) {
       const streams = hData.videos_manifest.servers[0].streams.map(s => ({
         url: s.url,
         quality: s.height + 'p',
-        isM3U8: s.url.includes('.m3u8')
+        isM3U8: true
       }));
       return res.status(200).json({ sources: streams });
     } catch (e) {
@@ -68,7 +79,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // 4. Multi-Mirror Consumet Proxy (Search/Watch)
+  // 4. Multi-Mirror Proxy
   const mirrors = [
     'https://api-consumet-org-ashy.vercel.app',
     'https://consumet-api.ryuk-me.dev',

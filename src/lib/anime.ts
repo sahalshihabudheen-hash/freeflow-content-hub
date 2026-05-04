@@ -111,7 +111,7 @@ export async function getAnimeInfo(id: string): Promise<AnimeDetails> {
     query ($id: Int) {
       Media(id: $id) {
         id
-        title { romaji english }
+        title { romaji english native }
         coverImage { large }
         description
         genres
@@ -130,13 +130,36 @@ export async function getAnimeInfo(id: string): Promise<AnimeDetails> {
   const data = await res.json();
   const a = data.data.Media;
   
-  // Search Hanime by title
-  let hanimeSlug = "";
+  // Try to get episodes from Anify using the same ID
+  let episodes: Episode[] = [];
   try {
-    const searchRes = await fetch(`${API}/hanime/search/${encodeURIComponent(a.title.english || a.title.romaji)}`);
-    const searchData = await searchRes.json();
-    hanimeSlug = searchData.results?.[0]?.slug || "";
-  } catch (e) {}
+    const anifyRes = await fetch(`${API}/anify/info/${id}?type=anime`);
+    const anifyData = await anifyRes.json();
+    
+    // Find a provider with episodes (prefer hentaihaven or hanime)
+    const provider = anifyData.episodes?.find((p: any) => p.providerId === 'hentaihaven' || p.providerId === 'hanime') || anifyData.episodes?.[0];
+    
+    if (provider && provider.episodes?.length > 0) {
+      episodes = provider.episodes.map((ep: any) => ({
+        id: `${id}|${provider.providerId}|${ep.number}|${encodeURIComponent(ep.id)}`,
+        number: ep.number,
+        title: ep.title || `Episode ${ep.number}`,
+        url: ep.id
+      }));
+    }
+  } catch (e) {
+    console.warn("[getAnimeInfo] Anify fetch failed, using manual episode generation", e);
+  }
+
+  // Fallback if no episodes found
+  if (episodes.length === 0) {
+    episodes = Array.from({ length: a.episodes || 1 }).map((_, i) => ({
+      id: `fallback|hanime|${i + 1}|${encodeURIComponent(a.title.english || a.title.romaji)}`,
+      number: i + 1,
+      title: `Episode ${i + 1}`,
+      url: ""
+    }));
+  }
 
   return {
     id: a.id.toString(),
@@ -147,58 +170,39 @@ export async function getAnimeInfo(id: string): Promise<AnimeDetails> {
     status: a.status,
     releaseDate: a.status,
     type: a.format,
-    episodes: Array.from({ length: a.episodes || 1 }).map((_, i) => ({
-      id: hanimeSlug ? `${hanimeSlug}-ep-${i + 1}` : `manual-${a.id}-ep-${i + 1}`,
-      number: i + 1,
-      title: `Episode ${i + 1}`,
-      url: hanimeSlug // Store slug for later
-    }))
+    episodes
   };
 }
 
 export async function getEpisodeSources(episodeId: string): Promise<StreamingLink[]> {
-  console.log(`[Streaming] Resolving sources for: ${episodeId}`);
+  const [anilistId, providerId, episodeNumber, watchId] = episodeId.split('|');
   
-  // 1. Try Hanime if applicable
-  if (episodeId.includes('-ep-')) {
-    const slug = episodeId.split('-ep-')[0];
-    const epNum = episodeId.split('-ep-')[1];
-    const targetSlug = slug.match(/-\d+$/) ? slug : `${slug}-${epNum}`;
-    
+  if (anilistId === 'fallback') {
+    // Search Hanime by title (last resort)
     try {
-      console.log(`[Streaming] Trying Hanime: ${targetSlug}`);
-      const res = await fetch(`${API}/hanime/video/${targetSlug}`);
-      if (res.ok) {
+      const searchRes = await fetch(`${API}/hanime/search/${watchId}`);
+      const searchData = await searchRes.json();
+      const slug = searchData.results?.[0]?.slug;
+      if (slug) {
+        const targetSlug = slug.match(/-\d+$/) ? slug : `${slug}-${episodeNumber}`;
+        const res = await fetch(`${API}/hanime/video/${targetSlug}`);
         const data = await res.json();
-        if (data.sources?.length > 0) return data.sources;
+        return data.sources || [];
       }
+    } catch (e) {}
+  } else {
+    // Use Anify Sources API
+    try {
+      const url = `${API}/anify/sources?id=${anilistId}&episodeNumber=${episodeNumber}&providerId=${providerId}&watchId=${watchId}&subType=sub`;
+      const res = await fetch(url);
+      const data = await res.json();
+      return data.sources?.map((s: any) => ({
+        url: s.url,
+        quality: s.quality || 'auto',
+        isM3U8: s.url.includes('.m3u8')
+      })) || [];
     } catch (e) {}
   }
 
-  // 2. Try HentaiHaven (slug based)
-  const hhSlug = episodeId.split('-ep-')[0].replace(/-ep$/, '');
-  const hhEpNum = episodeId.split('-ep-')[1] || "1";
-  
-  try {
-    const target = `${API}/anime/hentaihaven/watch/${hhSlug}-episode-${hhEpNum}`;
-    console.log(`[Streaming] Trying HentaiHaven: ${target}`);
-    const res = await fetch(target);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.sources?.length > 0) return data.sources;
-    }
-  } catch (e) {}
-
-  // 3. Last Resort: Try GogoAnime (common for older titles)
-  try {
-    const target = `${API}/anime/gogoanime/watch/${hhSlug}-episode-${hhEpNum}`;
-    console.log(`[Streaming] Trying GogoAnime: ${target}`);
-    const res = await fetch(target);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.sources?.length > 0) return data.sources;
-    }
-  } catch (e) {}
-
-  throw new Error("No available streaming sources found for this title.");
+  throw new Error("No available streaming sources found.");
 }
