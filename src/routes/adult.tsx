@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getMatureContent, getAnimatedComics, searchManga, type Manga } from "@/lib/mangadex";
+import { getTrendingAnime, getRecentEpisodes, searchAnime, type Anime } from "@/lib/anime";
 import { MangaCard } from "@/components/MangaCard";
-import { Loader2, Lock, Search, PlayCircle, Sparkles, Zap } from "lucide-react";
+import { AnimeCard } from "@/components/AnimeCard";
+import { Loader2, Lock, Search, PlayCircle, Sparkles, Zap, Film } from "lucide-react";
 import { useAdultAccess } from "@/hooks/use-adult-access";
 
 export const Route = createFileRoute("/adult")({
@@ -10,13 +12,15 @@ export const Route = createFileRoute("/adult")({
 });
 
 function AdultHub() {
-  const [source, setSource] = useState<"manga" | "manhwa">("manga");
+  const [source, setSource] = useState<"manga" | "manhwa" | "anime">("manga");
   const [mangaList, setMangaList] = useState<Manga[]>([]);
+  const [animeList, setAnimeList] = useState<Anime[]>([]);
   const [animated, setAnimated] = useState<Manga[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -29,19 +33,30 @@ function AdultHub() {
       if (isInitial) {
         setLoading(true);
         setMangaList([]);
+        setAnimeList([]);
       } else {
         setLoadingMore(true);
       }
       
-      let results: Manga[] = [];
-      if (query.trim()) {
-        results = await searchManga(query.trim(), LIMIT, newOffset, true);
+      if (source === "anime") {
+        let results: Anime[] = [];
+        const currentPage = isInitial ? 1 : Math.floor(newOffset / 20) + 1;
+        if (query.trim()) {
+          results = await searchAnime(query.trim(), currentPage);
+        } else {
+          results = await getTrendingAnime(currentPage);
+        }
+        setAnimeList(prev => isInitial ? results : [...prev, ...results]);
       } else {
-        const origLang = source === "manga" ? "ja" : "ko";
-        results = await getMatureContent(LIMIT, newOffset, selectedGenres, undefined, origLang);
+        let results: Manga[] = [];
+        if (query.trim()) {
+          results = await searchManga(query.trim(), LIMIT, newOffset, true);
+        } else {
+          const origLang = source === "manga" ? "ja" : "ko";
+          results = await getMatureContent(LIMIT, newOffset, selectedGenres, undefined, origLang);
+        }
+        setMangaList(prev => isInitial ? results : [...prev, ...results]);
       }
-
-      setMangaList(prev => isInitial ? results : [...prev, ...results]);
       setError(null);
     } catch (e: any) {
       setError(e.message);
@@ -118,7 +133,7 @@ function AdultHub() {
       </header>
 
       {/* Animated Section */}
-      {animated && animated.length > 0 && (
+      {animated && animated.length > 0 && source !== "anime" && (
         <section className="space-y-8">
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
             <div className="flex items-center gap-3">
@@ -147,30 +162,32 @@ function AdultHub() {
 
         {/* Search & Filters */}
         <div className="space-y-8 bg-secondary/20 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-xl">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-full mb-2">Filter by Taste Profile</p>
-            {MATURE_GENRES.map(g => (
-              <button
-                key={g}
-                onClick={() => toggleGenre(g)}
-                className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all duration-300 ${
-                  selectedGenres.includes(g) 
-                    ? "bg-destructive border-destructive text-white shadow-xl shadow-destructive/30 scale-105" 
-                    : "border-white/10 hover:border-destructive/40 text-muted-foreground hover:bg-white/5"
-                }`}
-              >
-                {g}
-              </button>
-            ))}
-            {selectedGenres.length > 0 && (
-              <button 
-                onClick={() => setSelectedGenres([])}
-                className="px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/10 transition-all"
-              >
-                Purge Filters
-              </button>
-            )}
-          </div>
+          {source !== "anime" && (
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-full mb-2">Filter by Taste Profile</p>
+              {MATURE_GENRES.map(g => (
+                <button
+                  key={g}
+                  onClick={() => toggleGenre(g)}
+                  className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all duration-300 ${
+                    selectedGenres.includes(g) 
+                      ? "bg-destructive border-destructive text-white shadow-xl shadow-destructive/30 scale-105" 
+                      : "border-white/10 hover:border-destructive/40 text-muted-foreground hover:bg-white/5"
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+              {selectedGenres.length > 0 && (
+                <button 
+                  onClick={() => setSelectedGenres([])}
+                  className="px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/10 transition-all"
+                >
+                  Purge Filters
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 w-full lg:w-auto">
@@ -180,7 +197,7 @@ function AdultHub() {
                   source === "manga" ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                 }`}
               >
-                Adult Manga
+                Manga
               </button>
               <button
                 onClick={() => setSource("manhwa")}
@@ -188,7 +205,15 @@ function AdultHub() {
                   source === "manhwa" ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                 }`}
               >
-                Adult Manhwa
+                Manhwa
+              </button>
+              <button
+                onClick={() => setSource("anime")}
+                className={`flex-1 lg:flex-none px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                  source === "anime" ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                }`}
+              >
+                Anime
               </button>
             </div>
 
@@ -234,11 +259,18 @@ function AdultHub() {
       ) : (
         <div className="space-y-16">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8 animate-fade-in">
-            {mangaList.map((m) => (
-              <div key={m.id} className="hover:scale-105 transition-transform duration-500">
-                <MangaCard manga={m} />
-              </div>
-            ))}
+            {source === "anime" 
+              ? animeList.map((a) => (
+                  <div key={a.id} className="hover:scale-105 transition-transform duration-500">
+                    <AnimeCard anime={a} />
+                  </div>
+                ))
+              : mangaList.map((m) => (
+                  <div key={m.id} className="hover:scale-105 transition-transform duration-500">
+                    <MangaCard manga={m} />
+                  </div>
+                ))
+            }
           </div>
 
           <div className="flex justify-center pb-20">
