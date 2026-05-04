@@ -456,7 +456,10 @@ export function Header() {
   const navLinks = [
     { to: "/", label: "Home", icon: Home },
     { to: "/search", label: "Browse", icon: Compass },
-    ...(hasAdultAccess ? [{ to: "/adult", label: "Mature", icon: Flame, color: "text-destructive" }] : []),
+    ...(hasAdultAccess ? [
+      { to: "/adult", label: "Mature", icon: Flame, color: "text-destructive" },
+      { to: "/anime", label: "Anime", icon: Play, color: "text-primary" }
+    ] : []),
   ];
 
   return (

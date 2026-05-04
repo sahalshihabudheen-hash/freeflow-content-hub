@@ -157,6 +157,7 @@ function MangaDetail() {
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary/50 border border-white/5 text-xs font-bold uppercase tracking-widest">
                   <Zap className="h-3.5 w-3.5 text-primary" /> {manga.status}
+                  {manga.lastChapter && <span className="ml-1 opacity-50">· {manga.lastChapter} Chapters</span>}
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary/50 border border-white/5 text-xs font-bold uppercase tracking-widest">
                   <ShieldAlert className="h-3.5 w-3.5 text-primary" /> {manga.contentRating}

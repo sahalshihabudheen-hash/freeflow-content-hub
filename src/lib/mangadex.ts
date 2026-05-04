@@ -24,6 +24,7 @@ export type Manga = {
   year: number | null;
   tags: string[];
   contentRating: string;
+  lastChapter: string | null;
 };
 
 export type Chapter = {
@@ -64,6 +65,7 @@ function mapManga(m: any): Manga {
     year: a.year,
     tags: (a.tags ?? []).map((t: any) => t.attributes?.name?.en).filter(Boolean),
     contentRating: a.contentRating,
+    lastChapter: a.lastChapter,
   };
 }
 
@@ -208,32 +210,47 @@ export async function getManga(id: string): Promise<Manga> {
   return mapManga(json.data);
 }
 
-export async function getChapters(mangaId: string, limit = 200, language?: string): Promise<Chapter[]> {
+export async function getChapters(mangaId: string, limit = 500, language?: string): Promise<Chapter[]> {
   const langParam = language ? `&translatedLanguage[]=${language}` : "";
   const url = `${API}/manga/${mangaId}/feed?limit=${limit}${langParam}&order[chapter]=asc&${ALL_CONTENT_PARAMS}&includes[]=scanlation_group`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to load chapters");
   const json = await res.json();
-  return json.data
-    .map((c: any) => {
-      const a = c.attributes;
-      const sg = c.relationships?.find((r: any) => r.type === "scanlation_group");
-      return {
-        id: c.id,
-        chapter: a.chapter,
-        title: a.title,
-        language: a.translatedLanguage,
-        pages: a.pages,
-        publishAt: a.publishAt,
-        scanlator: sg?.attributes?.name ?? "Unknown",
-        externalUrl: a.externalUrl ?? null,
-      };
-    })
-    .filter((c: any) => c.pages > 0 || c.externalUrl)
-    .filter((c: any, i: number, arr: any[]) => {
-      // Remove duplicate chapters (same number, same language, same scanlator)
-      return arr.findIndex(x => x.chapter === c.chapter && x.language === c.language && x.scanlator === c.scanlator) === i;
-    });
+  
+  const rawChapters = json.data.map((c: any) => {
+    const a = c.attributes;
+    const sg = c.relationships?.find((r: any) => r.type === "scanlation_group");
+    return {
+      id: c.id,
+      chapter: a.chapter,
+      title: a.title,
+      language: a.translatedLanguage,
+      pages: a.pages,
+      publishAt: a.publishAt,
+      scanlator: sg?.attributes?.name ?? "Unknown",
+      externalUrl: a.externalUrl ?? null,
+    };
+  });
+
+  // Filter out empty chapters unless they are external
+  const filtered = rawChapters.filter((c: any) => c.pages > 0 || c.externalUrl);
+
+  // Deduplicate by chapter number per language
+  // If multiple groups exist for the same chapter, we pick the one with most pages
+  const uniqueMap = new Map<string, any>();
+  for (const c of filtered) {
+    const key = `${c.chapter}-${c.language}`;
+    const existing = uniqueMap.get(key);
+    if (!existing || (c.pages > existing.pages)) {
+      uniqueMap.set(key, c);
+    }
+  }
+
+  return Array.from(uniqueMap.values()).sort((a, b) => {
+    const aNum = parseFloat(a.chapter || "0");
+    const bNum = parseFloat(b.chapter || "0");
+    return aNum - bNum;
+  });
 }
 
 export async function getAvailableLanguages(mangaId: string): Promise<string[]> {

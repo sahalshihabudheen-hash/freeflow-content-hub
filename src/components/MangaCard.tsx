@@ -65,8 +65,9 @@ export function MangaCard({ manga }: { manga: Manga }) {
         </div>
         {/* Status pill */}
         {manga.status && (
-          <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/60 backdrop-blur-sm text-white capitalize border border-white/10">
+          <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/60 backdrop-blur-sm text-white capitalize border border-white/10 flex items-center gap-1">
             {manga.status}
+            {manga.lastChapter && <span className="opacity-60 text-[9px]">· {manga.lastChapter}</span>}
           </div>
         )}
       </div>
