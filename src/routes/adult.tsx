@@ -290,8 +290,9 @@ function AdultHub() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8 animate-fade-in">
             {source === "anime" 
               ? animeList.map((a) => (
-                  <div key={a.id} className="hover:scale-105 transition-transform duration-500">
-                    <AnimeCard anime={a} />
+                  <div key={a.id} className="p-4 border rounded bg-card text-card-foreground">
+                    <p className="font-bold">{a.title}</p>
+                    <p className="text-xs opacity-50">ID: {a.id}</p>
                   </div>
                 ))
               : mangaList.map((m) => (
