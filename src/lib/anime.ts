@@ -13,7 +13,7 @@ export interface Anime {
 }
 
 export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
-  const res = await fetch(`https://api.jikan.moe/v4/anime?genres=12&order_by=popularity&sort=desc&page=${page}`);
+  const res = await fetch(`${API}/jikan/anime?genres=12&order_by=popularity&sort=desc&page=${page}`);
   if (!res.ok) throw new Error("Jikan fetch failed");
   const data = await res.json();
   return data.data.map((a: any) => ({
@@ -27,7 +27,7 @@ export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
 }
 
 export async function searchJikan(query: string, page = 1): Promise<Anime[]> {
-  const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&genres=12&page=${page}`);
+  const res = await fetch(`${API}/jikan/anime?q=${encodeURIComponent(query)}&genres=12&page=${page}`);
   if (!res.ok) throw new Error("Jikan search failed");
   const data = await res.json();
   return data.data.map((a: any) => ({
@@ -58,7 +58,7 @@ export type StreamingLink = {
 };
 
 export async function getAnimeInfo(id: string): Promise<AnimeDetails> {
-  const res = await fetch(`https://api.jikan.moe/v4/anime/${id}/full`);
+  const res = await fetch(`${API}/jikan/anime/${id}/full`);
   if (!res.ok) throw new Error("Anime details not found");
   const data = await res.json();
   const a = data.data;

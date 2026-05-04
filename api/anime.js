@@ -2,7 +2,17 @@ export default async function handler(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const path = req.url.split('/api/anime')[1];
 
-  const pathStr = url.pathname.replace(/^\/api\/anime\/?/, '');
+  // Handle Jikan API requests via proxy
+  if (path.startsWith('/jikan')) {
+    try {
+      const target = `https://api.jikan.moe/v4${path.replace('/jikan', '')}${url.search}`;
+      const jRes = await fetch(target);
+      const jData = await jRes.json();
+      return res.status(jRes.status).json(jData);
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
   
   // Try multiple mirrors if one fails
   const mirrors = [
