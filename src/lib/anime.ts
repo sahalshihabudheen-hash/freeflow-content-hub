@@ -34,7 +34,7 @@ export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
       body: JSON.stringify({ query, variables: { page } })
     });
     const data = await res.json();
-    return data.data.Page.media.map((a: any) => ({
+    const results = data.data.Page.media.map((a: any) => ({
       id: a.id.toString(),
       title: a.title.english || a.title.romaji,
       image: a.coverImage.large,
@@ -42,9 +42,29 @@ export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
       releaseDate: a.status,
       totalEpisodes: a.episodes
     }));
-  } catch (e) {
+
+    if (results.length === 0) {
+      console.warn("AniList returned empty results, adding debug item");
+      return [{
+        id: "debug-1",
+        title: "If you see this, AniList is empty",
+        image: "https://via.placeholder.com/400x600?text=AniList+Empty",
+        type: "DEBUG",
+        releaseDate: "NOW",
+        totalEpisodes: 0
+      }];
+    }
+    return results;
+  } catch (e: any) {
     console.error("AniList fetch failed", e);
-    return [];
+    return [{
+      id: "error-1",
+      title: "Fetch Error: " + e.message,
+      image: "https://via.placeholder.com/400x600?text=Fetch+Error",
+      type: "ERROR",
+      releaseDate: "ERROR",
+      totalEpisodes: 0
+    }];
   }
 }
 
