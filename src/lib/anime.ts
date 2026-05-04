@@ -13,31 +13,112 @@ export interface Anime {
 }
 
 export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
-  const res = await fetch(`https://api.jikan.moe/v4/anime?genres=12&order_by=popularity&sort=desc&page=${page}`);
-  if (!res.ok) throw new Error("Jikan fetch failed");
-  const data = await res.json();
-  return data.data.map((a: any) => ({
-    id: a.mal_id.toString(),
-    title: a.title,
-    image: a.images.jpg.large_image_url,
-    type: a.type,
-    releaseDate: a.status,
-    totalEpisodes: a.episodes
-  }));
+  try {
+    const res = await fetch(`https://api.jikan.moe/v4/anime?genres=12&order_by=popularity&sort=desc&page=${page}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.data?.length > 0) {
+        return data.data.map((a: any) => ({
+          id: a.mal_id.toString(),
+          title: a.title,
+          image: a.images.jpg.large_image_url,
+          type: a.type,
+          releaseDate: a.status,
+          totalEpisodes: a.episodes
+        }));
+      }
+    }
+  } catch (e) {
+    console.error("Jikan failed, trying AniList fallback...", e);
+  }
+
+  // Fallback to AniList
+  const query = `
+    query ($page: Int) {
+      Page(page: $page, perPage: 20) {
+        media(type: ANIME, isAdult: true, sort: POPULARITY_DESC) {
+          id
+          title { romaji english }
+          coverImage { large }
+          format
+          status
+          episodes
+        }
+      }
+    }
+  `;
+  try {
+    const res = await fetch("https://graphql.anilist.co", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables: { page } })
+    });
+    const data = await res.json();
+    return data.data.Page.media.map((a: any) => ({
+      id: a.id.toString(),
+      title: a.title.english || a.title.romaji,
+      image: a.coverImage.large,
+      type: a.format,
+      releaseDate: a.status,
+      totalEpisodes: a.episodes
+    }));
+  } catch (e) {
+    console.error("AniList fallback failed too.", e);
+    return [];
+  }
 }
 
 export async function searchJikan(query: string, page = 1): Promise<Anime[]> {
-  const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&genres=12&page=${page}`);
-  if (!res.ok) throw new Error("Jikan search failed");
-  const data = await res.json();
-  return data.data.map((a: any) => ({
-    id: a.mal_id.toString(),
-    title: a.title,
-    image: a.images.jpg.large_image_url,
-    type: a.type,
-    releaseDate: a.status,
-    totalEpisodes: a.episodes
-  }));
+  // Similar fallback logic for search
+  try {
+    const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&genres=12&page=${page}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.data?.length > 0) {
+        return data.data.map((a: any) => ({
+          id: a.mal_id.toString(),
+          title: a.title,
+          image: a.images.jpg.large_image_url,
+          type: a.type,
+          releaseDate: a.status,
+          totalEpisodes: a.episodes
+        }));
+      }
+    }
+  } catch (e) {}
+
+  const aniQuery = `
+    query ($search: String, $page: Int) {
+      Page(page: $page, perPage: 20) {
+        media(search: $search, type: ANIME, isAdult: true) {
+          id
+          title { romaji english }
+          coverImage { large }
+          format
+          status
+          episodes
+        }
+      }
+    }
+  `;
+  try {
+    const res = await fetch("https://graphql.anilist.co", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: aniQuery, variables: { search: query, page } })
+    });
+    const data = await res.json();
+    return data.data.Page.media.map((a: any) => ({
+      id: a.id.toString(),
+      title: a.title.english || a.title.romaji,
+      image: a.coverImage.large,
+      type: a.format,
+      releaseDate: a.status,
+      totalEpisodes: a.episodes
+    }));
+  } catch (e) {
+    return [];
+  }
 }
 
 export type Episode = {

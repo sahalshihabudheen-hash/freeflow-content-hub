@@ -34,6 +34,7 @@ function AdultHub() {
         setLoading(true);
         setMangaList([]);
         setAnimeList([]);
+        setError(null);
       } else {
         setLoadingMore(true);
       }
@@ -41,11 +42,16 @@ function AdultHub() {
       if (source === "anime") {
         let results: Anime[] = [];
         const currentPage = isInitial ? 1 : page;
+        
+        console.log(`[AdultHub] Fetching anime page ${currentPage}, query: ${query}`);
+        
         if (query.trim()) {
           results = await searchJikan(query.trim(), currentPage);
         } else {
           results = await fetchJikanAdultAnime(currentPage);
         }
+        
+        console.log(`[AdultHub] Found ${results.length} anime results`);
         setAnimeList(prev => isInitial ? results : [...prev, ...results]);
       } else {
         let results: Manga[] = [];
@@ -57,9 +63,9 @@ function AdultHub() {
         }
         setMangaList(prev => isInitial ? results : [...prev, ...results]);
       }
-      setError(null);
     } catch (e: any) {
-      setError(e.message);
+      console.error("[AdultHub] Error:", e);
+      setError(e.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
       setLoadingMore(false);
