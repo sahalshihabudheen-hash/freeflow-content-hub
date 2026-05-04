@@ -34,6 +34,19 @@ export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
       body: JSON.stringify({ query, variables: { page } })
     });
     const data = await res.json();
+    
+    // Add debug check
+    if (!data?.data?.Page?.media) {
+      return [{
+        id: "debug-no-data",
+        title: "DEBUG: AniList Proxy returned no data structure",
+        image: "https://via.placeholder.com/400x600?text=No+Data",
+        type: "DEBUG",
+        releaseDate: "NOW",
+        totalEpisodes: 0
+      }];
+    }
+
     const results = data.data.Page.media.map((a: any) => ({
       id: a.id.toString(),
       title: a.title.english || a.title.romaji,
@@ -44,11 +57,10 @@ export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
     }));
 
     if (results.length === 0) {
-      console.warn("AniList returned empty results, adding debug item");
       return [{
-        id: "debug-1",
-        title: "If you see this, AniList is empty",
-        image: "https://via.placeholder.com/400x600?text=AniList+Empty",
+        id: "debug-empty",
+        title: "DEBUG: AniList returned 0 items",
+        image: "https://via.placeholder.com/400x600?text=Empty",
         type: "DEBUG",
         releaseDate: "NOW",
         totalEpisodes: 0
@@ -56,11 +68,10 @@ export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
     }
     return results;
   } catch (e: any) {
-    console.error("AniList fetch failed", e);
     return [{
-      id: "error-1",
+      id: "error-fetch",
       title: "Fetch Error: " + e.message,
-      image: "https://via.placeholder.com/400x600?text=Fetch+Error",
+      image: "https://via.placeholder.com/400x600?text=Error",
       type: "ERROR",
       releaseDate: "ERROR",
       totalEpisodes: 0
