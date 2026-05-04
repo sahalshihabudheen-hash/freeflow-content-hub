@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getMatureContent, getAnimatedComics, searchManga, type Manga } from "@/lib/mangadex";
-import { getAnimeInfo, getEpisodeSources, type Anime } from "@/lib/anime";
-import { fetchAniListTrending, searchAniList, type AniListAnime } from "@/lib/anilist";
+import { getAnimeInfo, getEpisodeSources, fetchJikanAdultAnime, searchJikan, type Anime } from "@/lib/anime";
 import { MangaCard } from "@/components/MangaCard";
 import { AnimeCard } from "@/components/AnimeCard";
 import { Loader2, Lock, Search, PlayCircle, Sparkles, Zap, Film } from "lucide-react";
@@ -15,7 +14,7 @@ export const Route = createFileRoute("/adult")({
 function AdultHub() {
   const [source, setSource] = useState<"manga" | "manhwa" | "anime">("manga");
   const [mangaList, setMangaList] = useState<Manga[]>([]);
-  const [animeList, setAnimeList] = useState<any[]>([]);
+  const [animeList, setAnimeList] = useState<Anime[]>([]);
   const [animated, setAnimated] = useState<Manga[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -40,26 +39,12 @@ function AdultHub() {
       }
       
       if (source === "anime") {
-        let results: any[] = [];
-        const currentPage = isInitial ? 1 : Math.floor(newOffset / 20) + 1;
+        let results: Anime[] = [];
+        const currentPage = isInitial ? 1 : page;
         if (query.trim()) {
-          const aniResults = await searchAniList(query.trim(), currentPage);
-          results = aniResults.map(a => ({
-            id: a.id.toString(),
-            title: a.title.english || a.title.romaji,
-            image: a.coverImage.large,
-            type: a.format,
-            releaseDate: a.status
-          }));
+          results = await searchJikan(query.trim(), currentPage);
         } else {
-          const aniResults = await fetchAniListTrending(currentPage);
-          results = aniResults.map(a => ({
-            id: a.id.toString(),
-            title: a.title.english || a.title.romaji,
-            image: a.coverImage.large,
-            type: a.format,
-            releaseDate: a.status
-          }));
+          results = await fetchJikanAdultAnime(currentPage);
         }
         setAnimeList(prev => isInitial ? results : [...prev, ...results]);
       } else {

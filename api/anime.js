@@ -2,21 +2,6 @@ export default async function handler(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const path = req.url.split('/api/anime')[1];
 
-  // Handle AniList GraphQL requests via proxy
-  if (path === '/anilist') {
-    try {
-      const aniRes = await fetch('https://graphql.anilist.co', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(req.body)
-      });
-      const aniData = await aniRes.json();
-      return res.status(aniRes.status).json(aniData);
-    } catch (e) {
-      return res.status(500).json({ error: e.message });
-    }
-  }
-
   const pathStr = url.pathname.replace(/^\/api\/anime\/?/, '');
   
   // Try multiple mirrors if one fails
