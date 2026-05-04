@@ -5,11 +5,12 @@ export default async function handler(req, res) {
   
   // Try multiple mirrors if one fails
   const mirrors = [
-    'https://api.consumet.org/anime',
-    'https://consumet-api-fawn.vercel.app/anime',
-    'https://consumet-api-two.vercel.app/anime',
-    'https://api-consumet-org-ashy.vercel.app/anime',
-    'https://c.delusionz.xyz/anime'
+    'https://api.consumet.org',
+    'https://consumet-api-fawn.vercel.app',
+    'https://consumet-api-two.vercel.app',
+    'https://api-consumet-org-ashy.vercel.app',
+    'https://c.delusionz.xyz',
+    'https://consumet-api-clone.vercel.app'
   ];
 
   let lastError = null;

@@ -34,35 +34,15 @@ export type StreamingLink = {
   quality?: string;
 };
 
-export async function getTrendingAnime(page = 1): Promise<Anime[]> {
-  const res = await fetch(`${API}/hentaihaven/top-airing?page=${page}`);
-  if (!res.ok) throw new Error("Failed to fetch trending anime");
-  const data = await res.json();
-  return data.results || [];
-}
-
-export async function getRecentEpisodes(page = 1): Promise<Anime[]> {
-  const res = await fetch(`${API}/hentaihaven/recent-episodes?page=${page}`);
-  if (!res.ok) throw new Error("Failed to fetch recent episodes");
-  const data = await res.json();
-  return data.results || [];
-}
-
-export async function searchAnime(query: string, page = 1): Promise<Anime[]> {
-  const res = await fetch(`${API}/hentaihaven/${encodeURIComponent(query)}?page=${page}`);
-  if (!res.ok) throw new Error("Search failed");
-  const data = await res.json();
-  return data.results || [];
-}
-
+// We now use AniList for metadata, but we still need this for streaming info
 export async function getAnimeInfo(id: string): Promise<AnimeDetails> {
-  const res = await fetch(`${API}/hentaihaven/info/${id}`);
+  const res = await fetch(`${API}/meta/anilist/info/${id}`);
   if (!res.ok) throw new Error("Anime not found");
   return await res.json();
 }
 
 export async function getEpisodeSources(episodeId: string): Promise<StreamingLink[]> {
-  const res = await fetch(`${API}/hentaihaven/watch/${episodeId}`);
+  const res = await fetch(`${API}/meta/anilist/watch/${episodeId}`);
   if (!res.ok) throw new Error("Failed to load episode sources");
   const data = await res.json();
   return data.sources || [];

@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getMatureContent, getAnimatedComics, searchManga, type Manga } from "@/lib/mangadex";
-import { getTrendingAnime, getRecentEpisodes, searchAnime, type Anime } from "@/lib/anime";
+import { getAnimeInfo, getEpisodeSources, type Anime } from "@/lib/anime";
+import { fetchAniListTrending, searchAniList, type AniListAnime } from "@/lib/anilist";
 import { MangaCard } from "@/components/MangaCard";
 import { AnimeCard } from "@/components/AnimeCard";
 import { Loader2, Lock, Search, PlayCircle, Sparkles, Zap, Film } from "lucide-react";
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/adult")({
 function AdultHub() {
   const [source, setSource] = useState<"manga" | "manhwa" | "anime">("manga");
   const [mangaList, setMangaList] = useState<Manga[]>([]);
-  const [animeList, setAnimeList] = useState<Anime[]>([]);
+  const [animeList, setAnimeList] = useState<any[]>([]);
   const [animated, setAnimated] = useState<Manga[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -39,12 +40,26 @@ function AdultHub() {
       }
       
       if (source === "anime") {
-        let results: Anime[] = [];
+        let results: any[] = [];
         const currentPage = isInitial ? 1 : Math.floor(newOffset / 20) + 1;
         if (query.trim()) {
-          results = await searchAnime(query.trim(), currentPage);
+          const aniResults = await searchAniList(query.trim(), currentPage);
+          results = aniResults.map(a => ({
+            id: a.id.toString(),
+            title: a.title.english || a.title.romaji,
+            image: a.coverImage.large,
+            type: a.format,
+            releaseDate: a.status
+          }));
         } else {
-          results = await getTrendingAnime(currentPage);
+          const aniResults = await fetchAniListTrending(currentPage);
+          results = aniResults.map(a => ({
+            id: a.id.toString(),
+            title: a.title.english || a.title.romaji,
+            image: a.coverImage.large,
+            type: a.format,
+            releaseDate: a.status
+          }));
         }
         setAnimeList(prev => isInitial ? results : [...prev, ...results]);
       } else {
@@ -88,9 +103,15 @@ function AdultHub() {
   };
 
   const loadMore = () => {
-    const nextOffset = offset + LIMIT;
-    setOffset(nextOffset);
-    fetchContent(nextOffset);
+    if (source === "anime") {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchContent((nextPage - 1) * 20);
+    } else {
+      const nextOffset = offset + LIMIT;
+      setOffset(nextOffset);
+      fetchContent(nextOffset);
+    }
   };
 
   const { hasAdultAccess, loading: accessLoading } = useAdultAccess();
