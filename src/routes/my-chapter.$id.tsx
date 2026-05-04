@@ -14,6 +14,8 @@ function publicUrl(path: string): string {
 }
 
 import { useReadingProgress } from "@/hooks/use-reading-progress";
+import { ComicReaderScrollbar } from "@/components/ComicReaderScrollbar";
+
 
 type Comic = { id: string; title: string; cover_path: string | null };
 
@@ -102,6 +104,7 @@ function MyChapterReader() {
           )}
         </div>
       </div>
+      {chap?.page_paths && <ComicReaderScrollbar totalPages={chap.page_paths.length} />}
     </div>
   );
 }

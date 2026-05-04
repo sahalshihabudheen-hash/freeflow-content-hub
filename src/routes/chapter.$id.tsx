@@ -15,6 +15,8 @@ export const Route = createFileRoute("/chapter/$id")({
 });
 
 import { useReadingProgress } from "@/hooks/use-reading-progress";
+import { ComicReaderScrollbar } from "@/components/ComicReaderScrollbar";
+
 
 function ChapterReader() {
   const { id } = Route.useParams();
@@ -213,6 +215,8 @@ function ChapterReader() {
           </div>
         </div>
       )}
+      
+      {pages && <ComicReaderScrollbar totalPages={pages.length} />}
     </div>
   );
 }
