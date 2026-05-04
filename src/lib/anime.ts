@@ -34,18 +34,6 @@ export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
       body: JSON.stringify({ query, variables: { page } })
     });
     const data = await res.json();
-    
-    // Add debug check
-    if (!data?.data?.Page?.media) {
-      return [{
-        id: "debug-no-data",
-        title: "DEBUG: AniList Proxy returned no data structure",
-        image: "https://via.placeholder.com/400x600?text=No+Data",
-        type: "DEBUG",
-        releaseDate: "NOW",
-        totalEpisodes: 0
-      }];
-    }
 
     const results = data.data.Page.media.map((a: any) => ({
       id: a.id.toString(),
@@ -56,26 +44,10 @@ export async function fetchJikanAdultAnime(page = 1): Promise<Anime[]> {
       totalEpisodes: a.episodes
     }));
 
-    if (results.length === 0) {
-      return [{
-        id: "debug-empty",
-        title: "DEBUG: AniList returned 0 items",
-        image: "https://via.placeholder.com/400x600?text=Empty",
-        type: "DEBUG",
-        releaseDate: "NOW",
-        totalEpisodes: 0
-      }];
-    }
     return results;
   } catch (e: any) {
-    return [{
-      id: "error-fetch",
-      title: "Fetch Error: " + e.message,
-      image: "https://via.placeholder.com/400x600?text=Error",
-      type: "ERROR",
-      releaseDate: "ERROR",
-      totalEpisodes: 0
-    }];
+    console.error("AniList fetch failed", e);
+    return [];
   }
 }
 
@@ -110,27 +82,10 @@ export async function searchJikan(queryStr: string, page = 1): Promise<Anime[]> 
       totalEpisodes: a.episodes
     }));
 
-    if (results.length === 0) {
-      return [{
-        id: "debug-search-empty",
-        title: "Search returned 0 results",
-        image: "https://via.placeholder.com/400x600?text=Search+Empty",
-        type: "DEBUG",
-        releaseDate: "NOW",
-        totalEpisodes: 0
-      }];
-    }
     return results;
   } catch (e: any) {
     console.error("AniList search failed", e);
-    return [{
-      id: "error-search",
-      title: "Search Error: " + e.message,
-      image: "https://via.placeholder.com/400x600?text=Search+Error",
-      type: "ERROR",
-      releaseDate: "ERROR",
-      totalEpisodes: 0
-    }];
+    return [];
   }
 }
 

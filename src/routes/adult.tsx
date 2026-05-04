@@ -14,16 +14,7 @@ export const Route = createFileRoute("/adult")({
 function AdultHub() {
   const [source, setSource] = useState<"manga" | "manhwa" | "anime">("manga");
   const [mangaList, setMangaList] = useState<Manga[]>([]);
-  const [animeList, setAnimeList] = useState<Anime[]>([
-    {
-      id: "hardcoded-test",
-      title: "!!! IF YOU SEE THIS, REACT RENDERING IS WORKING !!!",
-      image: "https://via.placeholder.com/400x600?text=REACT+OK",
-      type: "TEST",
-      releaseDate: "NOW",
-      totalEpisodes: 1
-    }
-  ]);
+  const [animeList, setAnimeList] = useState<Anime[]>([]);
   const [animated, setAnimated] = useState<Manga[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -42,7 +33,7 @@ function AdultHub() {
       if (isInitial) {
         setLoading(true);
         setMangaList([]);
-        // setAnimeList([]);
+        setAnimeList([]);
         setError(null);
       } else {
         setLoadingMore(true);
@@ -60,16 +51,7 @@ function AdultHub() {
           results = await fetchJikanAdultAnime(currentPage);
         }
         
-        console.log(`[AdultHub] Found ${results.length} anime results`);
-        const testItem: Anime = {
-          id: "test-item",
-          title: "!!! SYSTEM CHECK: IF YOU SEE THIS, GRID IS WORKING !!!",
-          image: "https://via.placeholder.com/400x600?text=SYSTEM+CHECK+OK",
-          type: "TEST",
-          releaseDate: "LIVE",
-          totalEpisodes: 99
-        };
-        setAnimeList(prev => isInitial ? [testItem, ...results] : [...prev, ...results]);
+        setAnimeList(prev => isInitial ? results : [...prev, ...results]);
       } else {
         let results: Manga[] = [];
         if (query.trim()) {
@@ -279,7 +261,7 @@ function AdultHub() {
           </div>
           <p className="text-xs font-black uppercase tracking-widest text-muted-foreground animate-pulse tracking-[0.2em]">Scanning neural gateway...</p>
         </div>
-      ) : mangaList.length === 0 ? (
+      ) : (source === "anime" ? animeList.length === 0 : mangaList.length === 0) ? (
         <div className="text-center text-muted-foreground py-32 bg-secondary/10 rounded-[3rem] border border-dashed border-white/10">
           <Search className="h-16 w-16 mx-auto mb-6 opacity-10" />
           <p className="text-lg font-black uppercase tracking-tighter italic">Void Detected</p>
@@ -290,9 +272,8 @@ function AdultHub() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8 animate-fade-in">
             {source === "anime" 
               ? animeList.map((a) => (
-                  <div key={a.id} className="p-4 border rounded bg-card text-card-foreground">
-                    <p className="font-bold">{a.title}</p>
-                    <p className="text-xs opacity-50">ID: {a.id}</p>
+                  <div key={a.id} className="hover:scale-105 transition-transform duration-500">
+                    <AnimeCard anime={a} />
                   </div>
                 ))
               : mangaList.map((m) => (
