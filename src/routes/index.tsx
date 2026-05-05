@@ -258,10 +258,9 @@ function Index() {
           <div className="text-center text-destructive">{error}</div>
         )}
 
-        <Section title="Popular Now" items={popular} />
-        <Section title="New Releases" items={newReleases} />
-        <Section title="Top Rated" items={topRated} />
         <Section title="Recently Updated" items={recent} />
+        <Section title="Mature Manhwa" items={mature} />
+        <Section title="H-Manga & Doujinshi" items={doujinshi} />
         
         {recommended && (
           <section className="relative overflow-hidden rounded-3xl p-8 md:p-12 border border-primary/20 bg-black/40">
@@ -274,21 +273,28 @@ function Index() {
               </div>
               <div className="flex-grow space-y-4">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-widest">
-                  Featured Pick
+                  Featured Request
                 </div>
                 <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter">
-                  BASED ON YOUR <span className="text-primary">REQUEST</span>
+                  CHIZURU-CHAN <span className="text-primary">COLLECTION</span>
                 </h2>
                 <p className="text-muted-foreground text-lg max-w-xl">
-                  We found the series you were looking for! Dive into the development diary and discover similar high-quality doujinshi.
+                  Dive into the development diary. This series also has a popular anime adaptation available in our library!
                 </p>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
                   <Link 
                     to="/manga/$id" 
                     params={{ id: recommended.id }}
                     className="h-12 px-8 rounded-xl bg-primary text-primary-foreground font-bold flex items-center justify-center hover:scale-105 transition-transform"
                   >
-                    Read Now
+                    Read Manga
+                  </Link>
+                  <Link 
+                    to="/anime/$id" 
+                    params={{ id: "hanime-chizuru-chan-kaihatsu-nikki" }}
+                    className="h-12 px-8 rounded-xl bg-secondary text-foreground font-bold flex items-center justify-center border border-border hover:bg-muted transition-all"
+                  >
+                    Watch Anime
                   </Link>
                 </div>
               </div>
@@ -296,9 +302,9 @@ function Index() {
           </section>
         )}
 
+        <Section title="New Releases" items={newReleases} />
+        <Section title="Top Rated" items={topRated} />
         <Section title="Animated Comics" items={animated} />
-        <Section title="Mature Favorites" items={mature} />
-        <Section title="H-Manga & Doujinshi" items={doujinshi} />
         <Section title="Hardcore Collection" items={hentai} />
         {prefs?.genres.map((g) => (
           <Section key={g} title={g} items={genreSections[g] ?? null} />
