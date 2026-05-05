@@ -57,7 +57,6 @@ function Index() {
   const [hentai, setHentai] = useState<Manga[] | null>(null);
   const [doujinshi, setDoujinshi] = useState<Manga[] | null>(null);
   const [mucha, setMucha] = useState<Manga[] | null>(null);
-  const [recommended, setRecommended] = useState<Manga | null>(null);
   const [discovery, setDiscovery] = useState<Manga[]>([]);
   const [offset, setOffset] = useState(24);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -120,9 +119,8 @@ function Index() {
       getHentai(18, 0, prefs.genres, prefs.language),
       getDoujinshi(18, 0, prefs.language),
       getMuchaWorks(18, 0),
-      getManga("7533da40-085a-47c8-9960-5ed406491a34").catch(() => null),
     ])
-      .then(([p, r, t, n, a, m, h, d, mu, rec]) => {
+      .then(([p, r, t, n, a, m, h, d, mu]) => {
         setPopular(p);
         setRecent(r);
         setTopRated(t);
@@ -132,7 +130,6 @@ function Index() {
         setHentai(h);
         setDoujinshi(d);
         setMucha(mu);
-        setRecommended(rec);
         setDiscovery(p);
       })
       .catch((e) => setError(e.message));
@@ -267,46 +264,6 @@ function Index() {
         <Section title="Mature Manhwa" items={mature} />
         <Section title="H-Manga & Doujinshi" items={doujinshi} />
         <Section title="Mucha Special Collection" items={mucha} />
-        
-        {recommended && (
-          <section className="relative overflow-hidden rounded-3xl p-8 md:p-12 border border-primary/20 bg-black/40">
-            <div className="absolute top-0 right-0 w-1/3 h-full opacity-20 pointer-events-none">
-               <img src={recommended.coverUrl} className="w-full h-full object-cover blur-2xl" alt="" />
-            </div>
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-              <div className="w-48 flex-none shadow-2xl rotate-3">
-                 <MangaCard manga={recommended} />
-              </div>
-              <div className="flex-grow space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-widest">
-                  Featured Request
-                </div>
-                <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter">
-                  CHIZURU-CHAN <span className="text-primary">COLLECTION</span>
-                </h2>
-                <p className="text-muted-foreground text-lg max-w-xl">
-                  Dive into the development diary. This series also has a popular anime adaptation available in our library!
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <Link 
-                    to="/manga/$id" 
-                    params={{ id: recommended.id }}
-                    className="h-12 px-8 rounded-xl bg-primary text-primary-foreground font-bold flex items-center justify-center hover:scale-105 transition-transform"
-                  >
-                    Read Manga
-                  </Link>
-                  <Link 
-                    to="/anime/$id" 
-                    params={{ id: "hanime-chizuru-chan-kaihatsu-nikki" }}
-                    className="h-12 px-8 rounded-xl bg-secondary text-foreground font-bold flex items-center justify-center border border-border hover:bg-muted transition-all"
-                  >
-                    Watch Anime
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
 
         <Section title="New Releases" items={newReleases} />
         <Section title="Top Rated" items={topRated} />
