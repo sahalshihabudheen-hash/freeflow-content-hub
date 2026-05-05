@@ -91,6 +91,7 @@ export const GENRE_TAGS: Record<string, string> = {
   BDSM: "9466c479-8199-4795-870d-906cfedc900d",
   Incest: "5bd3376c-3dc0-4966-9e9b-986c75f560e9",
   Netorare: "2d1f5d5a-fa68-49d4-839c-76e93e231bc5",
+  Doujinshi: "b13b2a48-c720-44a9-9c77-39c9979373fb",
 };
 
 export const LANGUAGES: Record<string, string> = {

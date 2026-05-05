@@ -27,7 +27,7 @@ function AdultHub() {
   const [recommended, setRecommended] = useState<Manga | null>(null);
   
   const LIMIT = 30;
-  const MATURE_GENRES = ["School Life", "Gore", "BDSM", "Incest", "Netorare", "Sexual Violence"];
+  const MATURE_GENRES = ["School Life", "Gore", "BDSM", "Incest", "Netorare", "Sexual Violence", "Doujinshi"];
 
   const fetchContent = async (newOffset = 0, isInitial = false) => {
     try {
