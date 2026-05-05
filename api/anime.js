@@ -133,16 +133,19 @@ export default async function handler(req, res) {
 
       const contentType = pRes.headers.get('Content-Type');
       if (contentType && (contentType.includes('mpegurl') || targetUrl.includes('.m3u8'))) {
-        let text = await pRes.text();
-        // Rewrite relative URLs to absolute or to our proxy
+        // Rewrite segments, sub-manifests, and URI attributes
         const baseUrl = targetUrl.substring(0, targetUrl.lastIndexOf('/') + 1);
-        
-        // Rewrite segments and sub-manifests
-        text = text.replace(/^(?!#)(.*)$/gm, (line) => {
-          if (line.trim() === '') return line;
-          let absolute = line.startsWith('http') ? line : new URL(line, baseUrl).href;
+        const rewriteUrl = (urlStr) => {
+          if (urlStr.trim() === '' || urlStr.startsWith('#')) return urlStr;
+          const absolute = urlStr.startsWith('http') ? urlStr : new URL(urlStr, baseUrl).href;
           return `/api/anime/proxy?url=${encodeURIComponent(absolute)}&referer=${encodeURIComponent(referer)}`;
-        });
+        };
+
+        // 1. Rewrite lines that are just URLs
+        text = text.replace(/^(?!#)(.*)$/gm, (line) => rewriteUrl(line));
+        
+        // 2. Rewrite URI="..." attributes
+        text = text.replace(/URI="([^"]+)"/g, (match, p1) => `URI="${rewriteUrl(p1)}"`);
 
         res.setHeader('Content-Type', 'application/x-mpegURL');
         res.setHeader('Access-Control-Allow-Origin', '*');
