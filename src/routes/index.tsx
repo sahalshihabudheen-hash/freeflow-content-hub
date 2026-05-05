@@ -8,6 +8,9 @@ import {
   getByGenre,
   getAnimatedComics,
   getMatureContent,
+  getHentai,
+  getDoujinshi,
+  getManga,
   LANGUAGES,
   type Manga,
 } from "@/lib/mangadex";
@@ -50,6 +53,9 @@ function Index() {
   const [newReleases, setNewReleases] = useState<Manga[] | null>(null);
   const [animated, setAnimated] = useState<Manga[] | null>(null);
   const [mature, setMature] = useState<Manga[] | null>(null);
+  const [hentai, setHentai] = useState<Manga[] | null>(null);
+  const [doujinshi, setDoujinshi] = useState<Manga[] | null>(null);
+  const [recommended, setRecommended] = useState<Manga | null>(null);
   const [discovery, setDiscovery] = useState<Manga[]>([]);
   const [offset, setOffset] = useState(24);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -94,6 +100,8 @@ function Index() {
     setNewReleases(null);
     setAnimated(null);
     setMature(null);
+    setHentai(null);
+    setDoujinshi(null);
     setGenreSections({});
     setDiscovery([]);
     setOffset(24);
@@ -106,14 +114,20 @@ function Index() {
       getNewReleases(18, prefs.genres, prefs.language),
       getAnimatedComics(12, false),
       getMatureContent(18, 0, prefs.genres, prefs.language, 'ko'),
+      getHentai(18, 0, prefs.genres, prefs.language),
+      getDoujinshi(18, 0, prefs.language),
+      getManga("7533da40-085a-47c8-9960-5ed406491a34").catch(() => null),
     ])
-      .then(([p, r, t, n, a, m]) => {
+      .then(([p, r, t, n, a, m, h, d, rec]) => {
         setPopular(p);
         setRecent(r);
         setTopRated(t);
         setNewReleases(n);
         setAnimated(a);
         setMature(m);
+        setHentai(h);
+        setDoujinshi(d);
+        setRecommended(rec);
         setDiscovery(p);
       })
       .catch((e) => setError(e.message));
@@ -248,8 +262,44 @@ function Index() {
         <Section title="New Releases" items={newReleases} />
         <Section title="Top Rated" items={topRated} />
         <Section title="Recently Updated" items={recent} />
+        
+        {recommended && (
+          <section className="relative overflow-hidden rounded-3xl p-8 md:p-12 border border-primary/20 bg-black/40">
+            <div className="absolute top-0 right-0 w-1/3 h-full opacity-20 pointer-events-none">
+               <img src={recommended.coverUrl} className="w-full h-full object-cover blur-2xl" alt="" />
+            </div>
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+              <div className="w-48 flex-none shadow-2xl rotate-3">
+                 <MangaCard manga={recommended} />
+              </div>
+              <div className="flex-grow space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-widest">
+                  Featured Pick
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter">
+                  BASED ON YOUR <span className="text-primary">REQUEST</span>
+                </h2>
+                <p className="text-muted-foreground text-lg max-w-xl">
+                  We found the series you were looking for! Dive into the development diary and discover similar high-quality doujinshi.
+                </p>
+                <div className="flex gap-4">
+                  <Link 
+                    to="/manga/$id" 
+                    params={{ id: recommended.id }}
+                    className="h-12 px-8 rounded-xl bg-primary text-primary-foreground font-bold flex items-center justify-center hover:scale-105 transition-transform"
+                  >
+                    Read Now
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         <Section title="Animated Comics" items={animated} />
         <Section title="Mature Favorites" items={mature} />
+        <Section title="H-Manga & Doujinshi" items={doujinshi} />
+        <Section title="Hardcore Collection" items={hentai} />
         {prefs?.genres.map((g) => (
           <Section key={g} title={g} items={genreSections[g] ?? null} />
         ))}

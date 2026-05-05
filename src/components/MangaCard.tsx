@@ -70,6 +70,13 @@ export function MangaCard({ manga }: { manga: Manga }) {
             {manga.lastChapter && <span className="opacity-60 text-[9px]">· {manga.lastChapter}</span>}
           </div>
         )}
+
+        {/* Adult Badge */}
+        {(manga.contentRating === 'pornographic' || manga.contentRating === 'erotica') && (
+          <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-black bg-red-600 text-white uppercase tracking-tighter border border-red-500 shadow-lg shadow-red-900/50">
+            {manga.contentRating === 'pornographic' ? 'R-18' : 'M'}
+          </div>
+        )}
       </div>
       <h3 className="line-clamp-2 text-sm font-medium text-foreground group-hover:text-primary transition-colors">
         {manga.title}

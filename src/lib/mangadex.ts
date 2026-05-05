@@ -131,7 +131,7 @@ function buildFilterParams(genres?: string[], language?: string): string {
 
 export async function getPopular(limit = 24, offset = 0, genres?: string[], language?: string): Promise<Manga[]> {
   const filters = buildFilterParams(genres, language);
-  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&offset=${offset}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
+  const url = `${API}/manga?${ALL_CONTENT_PARAMS}&limit=${limit}&offset=${offset}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch popular manga");
   const json = await res.json();
@@ -140,7 +140,7 @@ export async function getPopular(limit = 24, offset = 0, genres?: string[], lang
 
 export async function getRecentlyUpdated(limit = 18, genres?: string[], language?: string): Promise<Manga[]> {
   const filters = buildFilterParams(genres, language);
-  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[latestUploadedChapter]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
+  const url = `${API}/manga?${ALL_CONTENT_PARAMS}&limit=${limit}&order[latestUploadedChapter]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch recent manga");
   const json = await res.json();
@@ -149,7 +149,7 @@ export async function getRecentlyUpdated(limit = 18, genres?: string[], language
 
 export async function getTopRated(limit = 18, genres?: string[], language?: string): Promise<Manga[]> {
   const filters = buildFilterParams(genres, language);
-  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[rating]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
+  const url = `${API}/manga?${ALL_CONTENT_PARAMS}&limit=${limit}&order[rating]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch top rated manga");
   const json = await res.json();
@@ -158,7 +158,7 @@ export async function getTopRated(limit = 18, genres?: string[], language?: stri
 
 export async function getNewReleases(limit = 18, genres?: string[], language?: string): Promise<Manga[]> {
   const filters = buildFilterParams(genres, language);
-  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[createdAt]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
+  const url = `${API}/manga?${ALL_CONTENT_PARAMS}&limit=${limit}&order[createdAt]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch new releases");
   const json = await res.json();
@@ -167,16 +167,15 @@ export async function getNewReleases(limit = 18, genres?: string[], language?: s
 
 export async function getByGenre(genre: string, limit = 12, language?: string): Promise<Manga[]> {
   const filters = buildFilterParams([genre], language);
-  const url = `${API}/manga?${SFW_PARAMS}&limit=${limit}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true&${filters}`;
+  const url = `${API}/manga?${ALL_CONTENT_PARAMS}&limit=${limit}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true&${filters}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch ${genre} manga`);
   const json = await res.json();
   return json.data.map(mapManga);
 }
 
-export async function searchManga(query: string, limit = 30, offset = 0, isAdult = false): Promise<Manga[]> {
-  const params = isAdult ? NSFW_PARAMS : SFW_PARAMS;
-  const url = `${API}/manga?${params}&limit=${limit}&offset=${offset}&title=${encodeURIComponent(query)}&includes[]=cover_art&order[relevance]=desc`;
+export async function searchManga(query: string, limit = 30, offset = 0): Promise<Manga[]> {
+  const url = `${API}/manga?${ALL_CONTENT_PARAMS}&limit=${limit}&offset=${offset}&title=${encodeURIComponent(query)}&includes[]=cover_art&order[relevance]=desc`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Search failed");
   const json = await res.json();
@@ -208,6 +207,27 @@ export async function getManga(id: string): Promise<Manga> {
   if (!res.ok) throw new Error("Manga not found");
   const json = await res.json();
   return mapManga(json.data);
+}
+
+export async function getHentai(limit = 24, offset = 0, genres?: string[], language?: string): Promise<Manga[]> {
+  const filters = buildFilterParams(genres, language);
+  // Content rating 'pornographic' is what most people mean by Hentai on MangaDex
+  const HENTAI_PARAMS = "contentRating[]=pornographic";
+  const url = `${API}/manga?${HENTAI_PARAMS}&limit=${limit}&offset=${offset}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${filters ? `&${filters}` : ""}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch hentai content");
+  const json = await res.json();
+  return json.data.map(mapManga);
+}
+
+export async function getDoujinshi(limit = 24, offset = 0, language?: string): Promise<Manga[]> {
+  const DOUJIN_TAG = "b13b2a48-c720-44a9-9c77-39c9979373fb";
+  const langParam = language ? `&availableTranslatedLanguage[]=${language}` : "";
+  const url = `${API}/manga?contentRating[]=erotica&contentRating[]=pornographic&includedTags[]=${DOUJIN_TAG}&limit=${limit}&offset=${offset}&order[followedCount]=desc&includes[]=cover_art&hasAvailableChapters=true${langParam}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch doujinshi content");
+  const json = await res.json();
+  return json.data.map(mapManga);
 }
 
 export async function getChapters(mangaId: string, _limit = 500, language?: string): Promise<Chapter[]> {
