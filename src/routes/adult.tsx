@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getMatureContent, getAnimatedComics, searchManga, getManga, type Manga } from "@/lib/mangadex";
+import { getMatureContent, getAnimatedComics, searchManga, getManga, getMuchaWorks, type Manga } from "@/lib/mangadex";
 import { getAnimeInfo, getEpisodeSources, fetchJikanAdultAnime, searchJikan, getHanimeTrending, type Anime } from "@/lib/anime";
 import { MangaCard } from "@/components/MangaCard";
 import { AnimeCard } from "@/components/AnimeCard";
@@ -25,6 +25,7 @@ function AdultHub() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [recommended, setRecommended] = useState<Manga | null>(null);
+  const [mucha, setMucha] = useState<Manga[] | null>(null);
   
   const LIMIT = 30;
   const MATURE_GENRES = ["School Life", "Gore", "BDSM", "Incest", "Netorare", "Sexual Violence", "Doujinshi"];
@@ -84,6 +85,7 @@ function AdultHub() {
   useEffect(() => {
     getAnimatedComics(12, true).then(setAnimated).catch(() => {});
     getManga("7533da40-085a-47c8-9960-5ed406491a34").then(setRecommended).catch(() => {});
+    getMuchaWorks(12, 0).then(setMucha).catch(() => {});
   }, []);
 
   const toggleGenre = (g: string) => {
@@ -195,10 +197,37 @@ function AdultHub() {
                   params={{ id: recommended.id }}
                   className="h-14 px-10 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs flex items-center justify-center hover:scale-105 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-95"
                 >
-                  Access Archives
+                  Read Manga
+                </Link>
+                <Link 
+                  to="/anime/$id" 
+                  params={{ id: "hanime-chizuru-chan-kaihatsu-nikki" }}
+                  className="h-14 px-10 rounded-2xl bg-secondary text-foreground font-black uppercase tracking-widest text-xs flex items-center justify-center border border-white/10 hover:bg-white/5 transition-all"
+                >
+                  Watch Anime
                 </Link>
               </div>
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Mucha Collection */}
+      {mucha && mucha.length > 0 && source === "manga" && !query && (
+        <section className="space-y-8">
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center gap-3">
+               <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                 <Sparkles className="h-6 w-6" />
+               </div>
+               <h2 className="text-2xl font-black uppercase tracking-tight italic">Mucha <span className="text-primary">Special Collection</span></h2>
+            </div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              Artist Choice
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {mucha.map(m => <MangaCard key={m.id} manga={m} />)}
           </div>
         </section>
       )}
