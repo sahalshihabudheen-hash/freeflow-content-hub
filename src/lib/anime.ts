@@ -88,6 +88,23 @@ export async function searchJikan(queryStr: string, page = 1): Promise<Anime[]> 
     return [];
   }
 }
+export async function getHanimeTrending(page = 1): Promise<Anime[]> {
+  try {
+    const res = await fetch(`${API}/hanime/list?page=${page}`);
+    const data = await res.json();
+    return (data.results || []).map((hit: any) => ({
+      id: `hanime-${hit.slug}`, // Use a prefix to distinguish from AniList IDs
+      title: hit.name,
+      image: hit.poster_url || hit.cover_url,
+      type: 'OVA',
+      releaseDate: hit.release_date,
+      totalEpisodes: 1
+    }));
+  } catch (e) {
+    console.warn("Hanime trending fetch failed", e);
+    return [];
+  }
+}
 
 export type Episode = {
   id: string;
@@ -107,6 +124,27 @@ export type StreamingLink = {
 };
 
 export async function getAnimeInfo(id: string): Promise<AnimeDetails> {
+  // Handle direct Hanime slugs
+  if (id.startsWith('hanime-')) {
+    const slug = id.replace('hanime-', '');
+    return {
+      id: `hanime-${slug}`,
+      title: slug.replace(/-/g, ' ').toUpperCase(),
+      image: `https://htv-static-img.itv-services.com/content/video/posters/${slug}.jpg`,
+      description: 'Direct Hanime content. No synopsis available.',
+      genres: ['Hentai'],
+      status: 'Released',
+      releaseDate: '',
+      type: 'OVA',
+      episodes: [{
+        id: `fallback|hanime_direct|1|${slug}`,
+        number: 1,
+        title: 'Watch Stream',
+        url: slug
+      }]
+    };
+  }
+
   const query = `
     query ($id: Int) {
       Media(id: $id) {

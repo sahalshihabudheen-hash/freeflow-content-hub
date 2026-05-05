@@ -48,7 +48,10 @@ function AdultHub() {
         if (query.trim()) {
           results = await searchJikan(query.trim(), currentPage);
         } else {
-          results = await fetchJikanAdultAnime(currentPage);
+          results = await getHanimeTrending(currentPage);
+          if (results.length === 0) {
+            results = await fetchJikanAdultAnime(currentPage);
+          }
         }
         
         setAnimeList(prev => isInitial ? results : [...prev, ...results]);
