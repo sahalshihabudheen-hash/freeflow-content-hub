@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getMatureContent, getAnimatedComics, searchManga, type Manga } from "@/lib/mangadex";
+import { getMatureContent, getAnimatedComics, searchManga, getManga, type Manga } from "@/lib/mangadex";
 import { getAnimeInfo, getEpisodeSources, fetchJikanAdultAnime, searchJikan, getHanimeTrending, type Anime } from "@/lib/anime";
 import { MangaCard } from "@/components/MangaCard";
 import { AnimeCard } from "@/components/AnimeCard";
@@ -24,6 +24,7 @@ function AdultHub() {
   const [query, setQuery] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [recommended, setRecommended] = useState<Manga | null>(null);
   
   const LIMIT = 30;
   const MATURE_GENRES = ["School Life", "Gore", "BDSM", "Incest", "Netorare", "Sexual Violence"];
@@ -82,6 +83,7 @@ function AdultHub() {
 
   useEffect(() => {
     getAnimatedComics(12, true).then(setAnimated).catch(() => {});
+    getManga("7533da40-085a-47c8-9960-5ed406491a34").then(setRecommended).catch(() => {});
   }, []);
 
   const toggleGenre = (g: string) => {
@@ -162,6 +164,41 @@ function AdultHub() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
             {animated.map(m => <MangaCard key={m.id} manga={m} />)}
+          </div>
+        </section>
+      )}
+
+      {/* Featured Recommendation */}
+      {recommended && source === "manga" && !query && (
+        <section className="relative overflow-hidden rounded-[3rem] p-8 md:p-12 border border-primary/20 bg-black/40 backdrop-blur-2xl">
+          <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
+             <img src={recommended.coverUrl} className="w-full h-full object-cover blur-3xl scale-150" alt="" />
+          </div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
+            <div className="w-56 flex-none shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7)] rotate-3 hover:rotate-0 transition-transform duration-500">
+               <MangaCard manga={recommended} />
+            </div>
+            <div className="flex-grow space-y-6">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em] border border-primary/20">
+                Exclusive Recommendation
+              </div>
+              <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter leading-none">
+                CHIZURU-CHAN&apos;S <br />
+                <span className="text-primary">DEVELOPMENT DIARY</span>
+              </h2>
+              <p className="text-muted-foreground text-base md:text-lg max-w-xl font-medium leading-relaxed">
+                You asked for it, and here it is. Experience the highly-rated series that sets the bar for high-quality adult doujinshi.
+              </p>
+              <div className="flex gap-4">
+                <Link 
+                  to="/manga/$id" 
+                  params={{ id: recommended.id }}
+                  className="h-14 px-10 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs flex items-center justify-center hover:scale-105 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-95"
+                >
+                  Access Archives
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       )}
