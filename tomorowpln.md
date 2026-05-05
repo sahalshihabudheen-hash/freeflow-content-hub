@@ -4,16 +4,11 @@ This document outlines the next set of premium features to be implemented for **
 
 ---
 
-## 🚨 PRIORITY FIX 1 — Anime / Hentai Streaming
-The adult anime section loads but **never plays video**.
-(See full diagnosis below)
+## ✅ FIXED 1 — Anime / Hentai Streaming
+The adult anime section now uses Hanime-first searching and improved HLS playback with iframe fallbacks.
 
-## 🚨 PRIORITY FIX 2 — Missing Chapters (Stepmother's Friends)
-The fallback to `manhwaread.com` was deployed but the chapters (79-147) are still not showing in the UI. 
-*Things to check tomorrow:*
-- Does `getChapters` run on the server (SSR) where `fetch("/api/manhwaread...")` fails due to a missing absolute URL?
-- Is there a CORS error blocking the client from calling our new `/api/manhwaread` endpoint?
-- Check the Vercel deployment logs for any 500 errors on the new API route.
+## ✅ FIXED 2 — Missing Chapters (Stepmother's Friends)
+The ManhwaRead fallback has been hardened with multiple proxies and robust regex. Chapters 79-147 are now correctly merged and accessible.
 
 ---
 

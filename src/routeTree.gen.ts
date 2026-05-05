@@ -20,9 +20,11 @@ import { Route as MyChapterIdRouteImport } from './routes/my-chapter.$id'
 import { Route as MangaIdRouteImport } from './routes/manga.$id'
 import { Route as ChapterIdRouteImport } from './routes/chapter.$id'
 import { Route as ApiImageRouteImport } from './routes/api.image'
+import { Route as AnimeIdRouteImport } from './routes/anime.$id'
 import { Route as AdminActivityIdRouteImport } from './routes/admin-activity.$id'
 import { Route as ApiMangadexSplatRouteImport } from './routes/api.mangadex.$'
 import { Route as ApiCoversSplatRouteImport } from './routes/api.covers.$'
+import { Route as AnimeWatchIdRouteImport } from './routes/anime.watch.$id'
 
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
@@ -79,6 +81,11 @@ const ApiImageRoute = ApiImageRouteImport.update({
   path: '/api/image',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnimeIdRoute = AnimeIdRouteImport.update({
+  id: '/anime/$id',
+  path: '/anime/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminActivityIdRoute = AdminActivityIdRouteImport.update({
   id: '/admin-activity/$id',
   path: '/admin-activity/$id',
@@ -94,6 +101,11 @@ const ApiCoversSplatRoute = ApiCoversSplatRouteImport.update({
   path: '/api/covers/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnimeWatchIdRoute = AnimeWatchIdRouteImport.update({
+  id: '/anime/watch/$id',
+  path: '/anime/watch/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,11 +115,13 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
   '/admin-activity/$id': typeof AdminActivityIdRoute
+  '/anime/$id': typeof AnimeIdRoute
   '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
   '/my-chapter/$id': typeof MyChapterIdRoute
   '/my-comic/$id': typeof MyComicIdRoute
+  '/anime/watch/$id': typeof AnimeWatchIdRoute
   '/api/covers/$': typeof ApiCoversSplatRoute
   '/api/mangadex/$': typeof ApiMangadexSplatRoute
 }
@@ -119,11 +133,13 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
   '/admin-activity/$id': typeof AdminActivityIdRoute
+  '/anime/$id': typeof AnimeIdRoute
   '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
   '/my-chapter/$id': typeof MyChapterIdRoute
   '/my-comic/$id': typeof MyComicIdRoute
+  '/anime/watch/$id': typeof AnimeWatchIdRoute
   '/api/covers/$': typeof ApiCoversSplatRoute
   '/api/mangadex/$': typeof ApiMangadexSplatRoute
 }
@@ -136,11 +152,13 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/upload': typeof UploadRoute
   '/admin-activity/$id': typeof AdminActivityIdRoute
+  '/anime/$id': typeof AnimeIdRoute
   '/api/image': typeof ApiImageRoute
   '/chapter/$id': typeof ChapterIdRoute
   '/manga/$id': typeof MangaIdRoute
   '/my-chapter/$id': typeof MyChapterIdRoute
   '/my-comic/$id': typeof MyComicIdRoute
+  '/anime/watch/$id': typeof AnimeWatchIdRoute
   '/api/covers/$': typeof ApiCoversSplatRoute
   '/api/mangadex/$': typeof ApiMangadexSplatRoute
 }
@@ -154,11 +172,13 @@ export interface FileRouteTypes {
     | '/search'
     | '/upload'
     | '/admin-activity/$id'
+    | '/anime/$id'
     | '/api/image'
     | '/chapter/$id'
     | '/manga/$id'
     | '/my-chapter/$id'
     | '/my-comic/$id'
+    | '/anime/watch/$id'
     | '/api/covers/$'
     | '/api/mangadex/$'
   fileRoutesByTo: FileRoutesByTo
@@ -170,11 +190,13 @@ export interface FileRouteTypes {
     | '/search'
     | '/upload'
     | '/admin-activity/$id'
+    | '/anime/$id'
     | '/api/image'
     | '/chapter/$id'
     | '/manga/$id'
     | '/my-chapter/$id'
     | '/my-comic/$id'
+    | '/anime/watch/$id'
     | '/api/covers/$'
     | '/api/mangadex/$'
   id:
@@ -186,11 +208,13 @@ export interface FileRouteTypes {
     | '/search'
     | '/upload'
     | '/admin-activity/$id'
+    | '/anime/$id'
     | '/api/image'
     | '/chapter/$id'
     | '/manga/$id'
     | '/my-chapter/$id'
     | '/my-comic/$id'
+    | '/anime/watch/$id'
     | '/api/covers/$'
     | '/api/mangadex/$'
   fileRoutesById: FileRoutesById
@@ -203,11 +227,13 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   UploadRoute: typeof UploadRoute
   AdminActivityIdRoute: typeof AdminActivityIdRoute
+  AnimeIdRoute: typeof AnimeIdRoute
   ApiImageRoute: typeof ApiImageRoute
   ChapterIdRoute: typeof ChapterIdRoute
   MangaIdRoute: typeof MangaIdRoute
   MyChapterIdRoute: typeof MyChapterIdRoute
   MyComicIdRoute: typeof MyComicIdRoute
+  AnimeWatchIdRoute: typeof AnimeWatchIdRoute
   ApiCoversSplatRoute: typeof ApiCoversSplatRoute
   ApiMangadexSplatRoute: typeof ApiMangadexSplatRoute
 }
@@ -291,6 +317,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiImageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/anime/$id': {
+      id: '/anime/$id'
+      path: '/anime/$id'
+      fullPath: '/anime/$id'
+      preLoaderRoute: typeof AnimeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-activity/$id': {
       id: '/admin-activity/$id'
       path: '/admin-activity/$id'
@@ -312,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCoversSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/anime/watch/$id': {
+      id: '/anime/watch/$id'
+      path: '/anime/watch/$id'
+      fullPath: '/anime/watch/$id'
+      preLoaderRoute: typeof AnimeWatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -323,11 +363,13 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   UploadRoute: UploadRoute,
   AdminActivityIdRoute: AdminActivityIdRoute,
+  AnimeIdRoute: AnimeIdRoute,
   ApiImageRoute: ApiImageRoute,
   ChapterIdRoute: ChapterIdRoute,
   MangaIdRoute: MangaIdRoute,
   MyChapterIdRoute: MyChapterIdRoute,
   MyComicIdRoute: MyComicIdRoute,
+  AnimeWatchIdRoute: AnimeWatchIdRoute,
   ApiCoversSplatRoute: ApiCoversSplatRoute,
   ApiMangadexSplatRoute: ApiMangadexSplatRoute,
 }

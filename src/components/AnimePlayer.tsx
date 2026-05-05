@@ -25,9 +25,24 @@ export function AnimePlayer({ url, onEnded, title }: Props) {
   const [muted, setMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [useIframe, setUseIframe] = useState(false);
   const controlsTimeout = useRef<any>(null);
 
   useEffect(() => {
+    setError(null);
+    setLoading(true);
+    setUseIframe(false);
+
+    if (!url) return;
+
+    // Check if the URL is an iframe source (e.g. hentaicity page)
+    if (url.includes('hentaicity.com') && !url.includes('.mp4')) {
+      setUseIframe(true);
+      setLoading(false);
+      return;
+    }
+
     // Load HLS.js from CDN
     if (!window.Hls) {
       const script = document.createElement("script");
@@ -43,19 +58,25 @@ export function AnimePlayer({ url, onEnded, title }: Props) {
       if (!videoRef.current || !url) return;
       const video = videoRef.current;
 
-      if (window.Hls && window.Hls.isSupported() && url.includes(".m3u8")) {
+      if (window.Hls && window.Hls.isSupported() && (url.includes(".m3u8") || url.includes("hanime"))) {
         const hls = new window.Hls({
           enableWorker: true,
           lowLatencyMode: true,
-          backBufferLength: 90
+          backBufferLength: 90,
+          xhrSetup: (xhr: any) => {
+            xhr.withCredentials = false;
+          }
         });
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
-          video.play().catch(() => {});
+          video.play().catch(() => {
+            setPlaying(false);
+          });
         });
         hls.on(window.Hls.Events.ERROR, (_event: any, data: any) => {
           if (data.fatal) {
+            console.error("HLS Fatal Error:", data);
             switch (data.type) {
               case window.Hls.ErrorTypes.NETWORK_ERROR:
                 hls.startLoad();
@@ -65,13 +86,17 @@ export function AnimePlayer({ url, onEnded, title }: Props) {
                 break;
               default:
                 hls.destroy();
+                setError("Failed to load video stream.");
                 break;
             }
           }
         });
       } else {
         video.src = url;
-        video.play().catch(() => {});
+        video.play().catch((e) => {
+          console.warn("Video play failed, might need user interaction or source is dead", e);
+          setPlaying(false);
+        });
       }
     }
 
@@ -91,6 +116,7 @@ export function AnimePlayer({ url, onEnded, title }: Props) {
     }
     setPlaying(!playing);
   };
+// ... rest of the component
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
@@ -155,17 +181,26 @@ export function AnimePlayer({ url, onEnded, title }: Props) {
       onMouseMove={handleMouseMove}
       onMouseLeave={() => playing && setShowControls(false)}
     >
-      <video
-        ref={videoRef}
-        className="w-full h-full cursor-pointer"
-        onClick={togglePlay}
-        onTimeUpdate={handleTimeUpdate}
-        onWaiting={() => setLoading(true)}
-        onPlaying={() => { setLoading(false); setPlaying(true); }}
-        onPause={() => setPlaying(false)}
-        onEnded={onEnded}
-        playsInline
-      />
+      {useIframe ? (
+        <iframe
+          src={url}
+          className="w-full h-full border-0"
+          allowFullScreen
+          allow="autoplay; encrypted-media"
+        />
+      ) : (
+        <video
+          ref={videoRef}
+          className="w-full h-full cursor-pointer"
+          onClick={togglePlay}
+          onTimeUpdate={handleTimeUpdate}
+          onWaiting={() => setLoading(true)}
+          onPlaying={() => { setLoading(false); setPlaying(true); }}
+          onPause={() => setPlaying(false)}
+          onEnded={onEnded}
+          playsInline
+        />
+      )}
 
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm pointer-events-none">
@@ -173,8 +208,21 @@ export function AnimePlayer({ url, onEnded, title }: Props) {
         </div>
       )}
 
+      {error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md text-center p-6">
+          <div className="text-red-500 font-bold mb-2">STREAM ERROR</div>
+          <p className="text-white/60 text-sm max-w-xs">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 px-6 py-2 bg-primary rounded-lg text-sm font-bold"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
+
       {/* Big Play Button Overlay when paused */}
-      {!playing && !loading && (
+      {!playing && !loading && !error && !useIframe && (
         <div 
           className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer"
           onClick={togglePlay}
