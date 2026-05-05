@@ -7,6 +7,7 @@ import {
   getNewReleases,
   getByGenre,
   getAnimatedComics,
+  getMatureContent,
   LANGUAGES,
   type Manga,
 } from "@/lib/mangadex";
@@ -48,6 +49,7 @@ function Index() {
   const [topRated, setTopRated] = useState<Manga[] | null>(null);
   const [newReleases, setNewReleases] = useState<Manga[] | null>(null);
   const [animated, setAnimated] = useState<Manga[] | null>(null);
+  const [mature, setMature] = useState<Manga[] | null>(null);
   const [discovery, setDiscovery] = useState<Manga[]>([]);
   const [offset, setOffset] = useState(24);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -91,6 +93,7 @@ function Index() {
     setTopRated(null);
     setNewReleases(null);
     setAnimated(null);
+    setMature(null);
     setGenreSections({});
     setDiscovery([]);
     setOffset(24);
@@ -102,14 +105,16 @@ function Index() {
       getTopRated(18, prefs.genres, prefs.language),
       getNewReleases(18, prefs.genres, prefs.language),
       getAnimatedComics(12, false),
+      getMatureContent(18, 0, prefs.genres, prefs.language, 'ko'),
     ])
-      .then(([p, r, t, n, a]) => {
+      .then(([p, r, t, n, a, m]) => {
         setPopular(p);
         setRecent(r);
         setTopRated(t);
         setNewReleases(n);
         setAnimated(a);
-        setDiscovery(p); // Initialize discovery with popular
+        setMature(m);
+        setDiscovery(p);
       })
       .catch((e) => setError(e.message));
 
@@ -244,6 +249,7 @@ function Index() {
         <Section title="Top Rated" items={topRated} />
         <Section title="Recently Updated" items={recent} />
         <Section title="Animated Comics" items={animated} />
+        <Section title="Mature Favorites" items={mature} />
         {prefs?.genres.map((g) => (
           <Section key={g} title={g} items={genreSections[g] ?? null} />
         ))}
