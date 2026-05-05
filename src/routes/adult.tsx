@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getMatureContent, getAnimatedComics, searchManga, type Manga } from "@/lib/mangadex";
-import { getAnimeInfo, getEpisodeSources, fetchJikanAdultAnime, searchJikan, type Anime } from "@/lib/anime";
+import { getAnimeInfo, getEpisodeSources, fetchJikanAdultAnime, searchJikan, getHanimeTrending, type Anime } from "@/lib/anime";
 import { MangaCard } from "@/components/MangaCard";
 import { AnimeCard } from "@/components/AnimeCard";
 import { Loader2, Lock, Search, PlayCircle, Sparkles, Zap, Film } from "lucide-react";

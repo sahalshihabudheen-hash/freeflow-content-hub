@@ -63,7 +63,8 @@ export default async function handler(req, res) {
 
   // New endpoint for direct listing (e.g. for series info)
   if (path && path.startsWith('/hanime/list')) {
-    const query = url.searchParams.get('q');
+    const query = url.searchParams.get('q') || "";
+    const page = parseInt(url.searchParams.get('page') || "0");
     try {
       const hRes = await fetch('https://search.htv-services.com/', {
         method: 'POST',
@@ -71,7 +72,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           search_text: query,
           tags: [], tags_mode: "AND", brands: [], blacklist: [],
-          order_by: "created_at_unix", ordering: "desc", page: 0
+          order_by: "created_at_unix", ordering: "desc", page: page
         })
       });
       const hData = await hRes.json();
@@ -133,10 +134,11 @@ export default async function handler(req, res) {
 
       const contentType = pRes.headers.get('Content-Type');
       if (contentType && (contentType.includes('mpegurl') || targetUrl.includes('.m3u8'))) {
+        let text = await pRes.text();
         // Rewrite segments, sub-manifests, and URI attributes
         const baseUrl = targetUrl.substring(0, targetUrl.lastIndexOf('/') + 1);
         const rewriteUrl = (urlStr) => {
-          if (urlStr.trim() === '' || urlStr.startsWith('#')) return urlStr;
+          if (!urlStr || urlStr.trim() === '' || urlStr.startsWith('#')) return urlStr;
           const absolute = urlStr.startsWith('http') ? urlStr : new URL(urlStr, baseUrl).href;
           return `/api/anime/proxy?url=${encodeURIComponent(absolute)}&referer=${encodeURIComponent(referer)}`;
         };
