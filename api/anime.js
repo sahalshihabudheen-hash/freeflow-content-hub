@@ -95,11 +95,16 @@ export default async function handler(req, res) {
          return res.status(404).json({ error: 'No video manifest found' });
       }
 
-      const streams = hData.videos_manifest.servers[0].streams.map(s => ({
-        url: s.url,
-        quality: s.height + 'p',
-        isM3U8: true
-      })).filter(s => s.url);
+      const server = hData.videos_manifest.servers.find(s => s.slug === 'cf-hls') || hData.videos_manifest.servers[0];
+      const streams = server.streams.map(s => {
+        // Use our server-side proxy for HLS to bypass Referer/CORS issues
+        const proxyUrl = `/api/anime/proxy?url=${encodeURIComponent(s.url)}&referer=${encodeURIComponent('https://hanime.tv/')}`;
+        return {
+          url: proxyUrl,
+          quality: s.height + 'p',
+          isM3U8: true
+        };
+      }).filter(s => s.url);
 
       if (streams.length === 0) {
         return res.status(404).json({ error: 'No streamable URLs found' });
@@ -111,7 +116,51 @@ export default async function handler(req, res) {
     }
   }
 
-  // 4. HentaiCity Proxy (Improved)
+  // 4. HLS Proxy (Crucial for playback)
+  if (path && path.startsWith('/proxy')) {
+    const targetUrl = url.searchParams.get('url');
+    const referer = url.searchParams.get('referer') || 'https://hanime.tv/';
+    if (!targetUrl) return res.status(400).send('Missing url');
+
+    try {
+      const pRes = await fetch(targetUrl, {
+        headers: { 
+          'User-Agent': 'Mozilla/5.0',
+          'Referer': referer,
+          'Origin': new URL(referer).origin
+        }
+      });
+
+      const contentType = pRes.headers.get('Content-Type');
+      if (contentType && (contentType.includes('mpegurl') || targetUrl.includes('.m3u8'))) {
+        let text = await pRes.text();
+        // Rewrite relative URLs to absolute or to our proxy
+        const baseUrl = targetUrl.substring(0, targetUrl.lastIndexOf('/') + 1);
+        
+        // Rewrite segments and sub-manifests
+        text = text.replace(/^(?!#)(.*)$/gm, (line) => {
+          if (line.trim() === '') return line;
+          let absolute = line.startsWith('http') ? line : new URL(line, baseUrl).href;
+          return `/api/anime/proxy?url=${encodeURIComponent(absolute)}&referer=${encodeURIComponent(referer)}`;
+        });
+
+        res.setHeader('Content-Type', 'application/x-mpegURL');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        return res.status(200).send(text);
+      } else {
+        // Pipe the binary data (segments)
+        const data = await pRes.arrayBuffer();
+        res.setHeader('Content-Type', contentType || 'video/MP2T');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        return res.status(200).send(Buffer.from(data));
+      }
+    } catch (e) {
+      return res.status(500).send(e.message);
+    }
+  }
+
+  // 5. HentaiCity Proxy
   if (path && path.startsWith('/hentaicity/search')) {
     const query = path.split('/hentaicity/search/')[1];
     try {
@@ -120,7 +169,6 @@ export default async function handler(req, res) {
         signal: AbortSignal.timeout(8000)
       });
       const html = await hcRes.text();
-      // Extract results using more robust regex
       const results = [];
       const regex = /<div class="thumb"><a href="([^"]+)" title="([^"]+)"><img src="([^"]+)"/g;
       let m;
@@ -141,8 +189,7 @@ export default async function handler(req, res) {
         signal: AbortSignal.timeout(8000)
       });
       const html = await hcRes.text();
-      // Look for sources in the HTML
-      // Often in a <source> tag or inside a JSON object
+      
       const sourceMatch = html.match(/source src="([^"]+)" type="video\/mp4"/) || 
                           html.match(/"file":"([^"]+\.mp4)"/);
       
@@ -151,7 +198,12 @@ export default async function handler(req, res) {
           sources: [{ url: sourceMatch[1].replace(/\\/g, ''), quality: '720p', isM3U8: false }] 
         });
       }
-      return res.status(404).json({ error: 'No video source found on page' });
+
+      // Fallback: Use the page URL as an iframe source
+      // Our AnimePlayer now supports rendering iframes if the URL is not a direct video
+      return res.status(200).json({ 
+        sources: [{ url: videoUrl, quality: 'iframe', isM3U8: false }] 
+      });
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
@@ -160,8 +212,9 @@ export default async function handler(req, res) {
   // 5. Multi-Mirror Proxy (Consumet Fallback)
   const mirrors = [
     'https://api-consumet-org-ashy.vercel.app',
-    'https://consumet-api-clone.vercel.app', // Added another possible mirror
-    'https://api.consumet.org'
+    'https://consumet-api-clone.vercel.app',
+    'https://api.consumet.org',
+    'https://consumet-api-gamma.vercel.app'
   ];
 
   for (const mirror of mirrors) {

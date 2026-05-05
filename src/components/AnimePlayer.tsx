@@ -36,8 +36,11 @@ export function AnimePlayer({ url, onEnded, title }: Props) {
 
     if (!url) return;
 
-    // Check if the URL is an iframe source (e.g. hentaicity page)
-    if (url.includes('hentaicity.com') && !url.includes('.mp4')) {
+    // Check if the URL is an iframe source
+    const isVideoFile = url.match(/\.(mp4|m3u8|webm|ogg|mp3)(\?|$)/i);
+    const isIframeHint = url.includes('hentaicity.com') || url.includes('hanime.tv/videos') || !isVideoFile;
+
+    if (isIframeHint && !url.includes('.m3u8') && !url.includes('.mp4')) {
       setUseIframe(true);
       setLoading(false);
       return;
