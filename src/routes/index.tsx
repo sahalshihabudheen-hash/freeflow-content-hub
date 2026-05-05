@@ -10,6 +10,7 @@ import {
   getMatureContent,
   getHentai,
   getDoujinshi,
+  getMuchaWorks,
   getManga,
   LANGUAGES,
   type Manga,
@@ -55,6 +56,7 @@ function Index() {
   const [mature, setMature] = useState<Manga[] | null>(null);
   const [hentai, setHentai] = useState<Manga[] | null>(null);
   const [doujinshi, setDoujinshi] = useState<Manga[] | null>(null);
+  const [mucha, setMucha] = useState<Manga[] | null>(null);
   const [recommended, setRecommended] = useState<Manga | null>(null);
   const [discovery, setDiscovery] = useState<Manga[]>([]);
   const [offset, setOffset] = useState(24);
@@ -102,6 +104,7 @@ function Index() {
     setMature(null);
     setHentai(null);
     setDoujinshi(null);
+    setMucha(null);
     setGenreSections({});
     setDiscovery([]);
     setOffset(24);
@@ -116,9 +119,10 @@ function Index() {
       getMatureContent(18, 0, prefs.genres, prefs.language, 'ko'),
       getHentai(18, 0, prefs.genres, prefs.language),
       getDoujinshi(18, 0, prefs.language),
+      getMuchaWorks(18, 0),
       getManga("7533da40-085a-47c8-9960-5ed406491a34").catch(() => null),
     ])
-      .then(([p, r, t, n, a, m, h, d, rec]) => {
+      .then(([p, r, t, n, a, m, h, d, mu, rec]) => {
         setPopular(p);
         setRecent(r);
         setTopRated(t);
@@ -127,6 +131,7 @@ function Index() {
         setMature(m);
         setHentai(h);
         setDoujinshi(d);
+        setMucha(mu);
         setRecommended(rec);
         setDiscovery(p);
       })
@@ -261,6 +266,7 @@ function Index() {
         <Section title="Recently Updated" items={recent} />
         <Section title="Mature Manhwa" items={mature} />
         <Section title="H-Manga & Doujinshi" items={doujinshi} />
+        <Section title="Mucha Special Collection" items={mucha} />
         
         {recommended && (
           <section className="relative overflow-hidden rounded-3xl p-8 md:p-12 border border-primary/20 bg-black/40">

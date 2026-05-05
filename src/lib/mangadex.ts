@@ -231,6 +231,16 @@ export async function getDoujinshi(limit = 24, offset = 0, language?: string): P
   return json.data.map(mapManga);
 }
 
+export async function getMuchaWorks(limit = 24, offset = 0): Promise<Manga[]> {
+  const MUCHA_ID = "08adf53c-f655-437f-946e-6cd64b04946f";
+  const MUCHAKAI_ID = "08960cd0-8d9c-4b04-b12e-91f02e85fccc";
+  const url = `${API}/manga?authorOrArtist=${MUCHA_ID}&authorOrArtist=${MUCHAKAI_ID}&limit=${limit}&offset=${offset}&includes[]=cover_art&hasAvailableChapters=true&${ALL_CONTENT_PARAMS}&order[followedCount]=desc`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch Mucha's works");
+  const json = await res.json();
+  return json.data.map(mapManga);
+}
+
 export async function getChapters(mangaId: string, _limit = 500, language?: string): Promise<Chapter[]> {
   const langParam = language ? `&translatedLanguage[]=${language}` : "";
   const PAGE_SIZE = 500; // MangaDex max per request
