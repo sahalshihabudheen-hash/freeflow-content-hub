@@ -99,7 +99,8 @@ export default async function handler(req, res) {
       const server = hData.videos_manifest.servers.find(s => s.slug === 'cf-hls') || hData.videos_manifest.servers[0];
       const streams = server.streams.map(s => {
         // Use our server-side proxy for HLS to bypass Referer/CORS issues
-        const proxyUrl = `/api/anime/proxy?url=${encodeURIComponent(s.url)}&referer=${encodeURIComponent('https://hanime.tv/')}`;
+        const videoReferer = `https://hanime.tv/videos/hentai/${slug}`;
+        const proxyUrl = `/api/anime/proxy?url=${encodeURIComponent(s.url)}&referer=${encodeURIComponent(videoReferer)}`;
         return {
           url: proxyUrl,
           quality: s.height + 'p',
@@ -126,9 +127,10 @@ export default async function handler(req, res) {
     try {
       const pRes = await fetch(targetUrl, {
         headers: { 
-          'User-Agent': 'Mozilla/5.0',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
           'Referer': referer,
-          'Origin': new URL(referer).origin
+          'Accept': '*/*',
+          'Accept-Language': 'en-US,en;q=0.9',
         }
       });
 
@@ -139,18 +141,20 @@ export default async function handler(req, res) {
         const baseUrl = targetUrl.substring(0, targetUrl.lastIndexOf('/') + 1);
         const rewriteUrl = (urlStr) => {
           if (!urlStr || urlStr.trim() === '' || urlStr.startsWith('#')) return urlStr;
+          // Handle relative URLs
           const absolute = urlStr.startsWith('http') ? urlStr : new URL(urlStr, baseUrl).href;
           return `/api/anime/proxy?url=${encodeURIComponent(absolute)}&referer=${encodeURIComponent(referer)}`;
         };
 
-        // 1. Rewrite lines that are just URLs
-        text = text.replace(/^(?!#)(.*)$/gm, (line) => rewriteUrl(line));
+        // 1. Rewrite lines that are just URLs (segments or sub-playlists)
+        text = text.replace(/^(?!#)(.+)$/gm, (line) => rewriteUrl(line));
         
-        // 2. Rewrite URI="..." attributes
+        // 2. Rewrite URI="..." attributes (keys, etc.)
         text = text.replace(/URI="([^"]+)"/g, (match, p1) => `URI="${rewriteUrl(p1)}"`);
 
         res.setHeader('Content-Type', 'application/x-mpegURL');
         res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'no-cache');
         return res.status(200).send(text);
       } else {
         // Pipe the binary data (segments)
