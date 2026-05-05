@@ -80,16 +80,19 @@ export function AnimePlayer({ url, onEnded, title }: Props) {
         hls.on(window.Hls.Events.ERROR, (_event: any, data: any) => {
           if (data.fatal) {
             console.error("HLS Fatal Error:", data);
+            const status = data.response?.code || data.response?.status || "Unknown";
             switch (data.type) {
               case window.Hls.ErrorTypes.NETWORK_ERROR:
+                setError(`Network Error: Server returned ${status}. Retrying...`);
                 hls.startLoad();
                 break;
               case window.Hls.ErrorTypes.MEDIA_ERROR:
+                setError("Media Error: Decoding failed. Recovering...");
                 hls.recoverMediaError();
                 break;
               default:
                 hls.destroy();
-                setError("Failed to load video stream.");
+                setError(`Fatal Error (${status}): Failed to load video stream.`);
                 break;
             }
           }
